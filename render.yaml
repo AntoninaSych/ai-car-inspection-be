@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: goit-node-rest-api
+    env: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: goit-postgres
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        value: your_secret_here
+      - key: PORT
+        value: 10000
+
+databases:
+  - name: goit-postgres
+    plan: free
+    region: frankfurt
