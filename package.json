@@ -32,7 +32,8 @@
     "sequelize": "^6.37.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "jest": "^29.7.0",
