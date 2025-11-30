@@ -27,41 +27,21 @@ module.exports = {
         name: user.name,
         email: user.email,
         password: await bcrypt.hash("password123", 10),
-        avatarURL:
-          user.name === "Foodies Admin"
-            ? `${baseUrl}/public/images/avatars/admin.jpeg`
-            : `${baseUrl}/public/images/avatars/default.png`,
+        avatarURL: `${baseUrl}/public/images/avatars/default.png`,
         token: user.token,
         createdAt: now,
         updatedAt: now,
       }))
     );
 
-    // Insert users
     await queryInterface.bulkInsert("users", hashedUsers);
 
-    // Insert follows (user-user)
-    const follows = [];
-    for (const [followedId, followerIds] of Object.entries(
-      relationships.followers
-    )) {
-      followerIds.forEach((followerId) => {
-        follows.push({
-          id: uuidv4(),
-          followerId,
-          followingId: followedId,
-          createdAt: now,
-          updatedAt: now,
-        });
-      });
-    }
-    if (follows.length > 0) {
-      await queryInterface.bulkInsert("follows", follows);
-    }
+
+
+
   },
 
   async down(queryInterface) {
-    await queryInterface.bulkDelete("follows", null, {});
-    await queryInterface.bulkDelete("users", null, {});
+     await queryInterface.bulkDelete("users", null, {});
   },
 };

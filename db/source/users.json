@@ -2,15 +2,8 @@
   "users": [
     {
       "id": "24682992-f3ea-4063-9de9-8a58c427cee7",
-      "name": "Car Admin",
-      "email": "DATABASE_URL=postgres://ai_car:tHObLTzYNYXkML3xwNkVJUEIoyX3UNcM@localhost:5432/ai_car\n",
-      "avatarURL": null,
-      "token": null
-    },
-    {
-      "id": "24682992-f3ea-4063-9de9-8a58c427cee7",
-      "name": "Car User",
-      "email": "user@aicar.com",
+      "name": "Mariam",
+      "email": "stone",
       "avatarURL": null,
       "token": null
     }
