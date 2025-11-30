@@ -9,6 +9,10 @@ import swaggerJsdoc from "swagger-jsdoc";
 import usersRouter from "./routes/users.routes.js";
 import carsRouter from "./routes/cars.routes.js";
 import HttpError from "./helpers/HttpError.js";
+import imagesRouter from "./routes/images.routes.js";
+import tasksRouter from "./routes/tasks.routes.js";
+
+
 
 dotenv.config();
 dotenv.config({ path: "./.env" });
@@ -29,7 +33,8 @@ app.use(
 );
 app.use(express.static("public"));
 app.use(express.static("public/images/recipies"));
-
+app.use("/api/images", imagesRouter);
+app.use("/api/tasks", tasksRouter);
 app.use("/api/users", usersRouter);
 const PORT = process.env.PORT || 5000;
 const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;

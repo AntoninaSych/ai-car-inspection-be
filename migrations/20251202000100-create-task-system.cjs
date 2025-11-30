@@ -79,24 +79,30 @@ module.exports = {
                 defaultValue: Sequelize.UUIDV4,
                 primaryKey: true,
             },
+
+            // FK must be UUID
             brand_id: {
-                type: Sequelize.STRING(50),
+                type: Sequelize.UUID,
                 allowNull: true,
                 references: { model: "car_brands", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "SET NULL",
             },
+
+            // FK must be UUID
             model_id: {
-                type: Sequelize.STRING(50),
+                type: Sequelize.UUID,
                 allowNull: true,
                 references: { model: "car_models", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "SET NULL",
             },
+
             description: {
                 type: Sequelize.TEXT,
                 allowNull: true,
             },
+
             owner_id: {
                 type: Sequelize.UUID,
                 allowNull: false,
@@ -104,22 +110,32 @@ module.exports = {
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             },
+
             current_status_id: {
-                type: Sequelize.UUID,
+                type: Sequelize.UUID, // fixed INTEGER → UUID
                 allowNull: true,
                 references: { model: "task_statuses", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "SET NULL",
             },
+
+            is_paid: {
+                type: Sequelize.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
+
             created_at: {
                 type: Sequelize.DATE,
                 defaultValue: Sequelize.literal("NOW()"),
             },
+
             updated_at: {
                 type: Sequelize.DATE,
                 defaultValue: Sequelize.literal("NOW()"),
             },
         });
+
 
 
         //
@@ -131,25 +147,42 @@ module.exports = {
                 defaultValue: Sequelize.UUIDV4,
                 primaryKey: true,
             },
+
             task_id: {
                 type: Sequelize.UUID,
                 allowNull: false,
-                references: { model: "tasks", key: "id" },
+                references: {
+                    model: "tasks",
+                    key: "id",
+                },
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             },
+
             status_id: {
                 type: Sequelize.UUID,
                 allowNull: false,
-                references: { model: "task_statuses", key: "id" },
+                references: {
+                    model: "task_statuses",
+                    key: "id",
+                },
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             },
+
             created_at: {
                 type: Sequelize.DATE,
                 defaultValue: Sequelize.literal("NOW()"),
+                allowNull: false,
             },
+
+            updated_at: {
+                type: Sequelize.DATE,
+                defaultValue: Sequelize.literal("NOW()"),
+                allowNull: false,
+            }
         });
+
 
 
         //
@@ -171,10 +204,10 @@ module.exports = {
             },
             task_id: {
                 type: Sequelize.UUID,
-                allowNull: false,
+                allowNull: true,
                 references: { model: "tasks", key: "id" },
                 onUpdate: "CASCADE",
-                onDelete: "CASCADE",
+                onDelete: "SET NULL",
             },
             image_type_id: {
                 type: Sequelize.UUID,
@@ -200,8 +233,7 @@ module.exports = {
         await queryInterface.createTable("reports", {
             id: {
                 type: Sequelize.UUID,
-                defaultValue: Sequelize.UUIDV4,
-                primaryKey: true,
+                defaultValue: Sequelize.UUIDV4
             },
             url: {
                 type: Sequelize.STRING(255),

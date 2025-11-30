@@ -1,9 +1,8 @@
-// models/CarModel.js
 import { DataTypes } from "sequelize";
 import sequelize from "../db/sequelize.js";
 
-const CarModel = sequelize.define(
-    "CarModel",
+const Image = sequelize.define(
+    "Image",
     {
         id: {
             type: DataTypes.UUID,
@@ -11,36 +10,24 @@ const CarModel = sequelize.define(
             primaryKey: true,
         },
 
-        // API model ID: e.g. "ABARTH_500"
-        code: {
-            type: DataTypes.STRING(50),
+        local_path: {
+            type: DataTypes.STRING(255),
             allowNull: false,
         },
 
-        brand_id: {
+        verified: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+
+        task_id: {
+            type: DataTypes.UUID,
+            allowNull: true,
+        },
+
+        image_type_id: {
             type: DataTypes.UUID,
             allowNull: false,
-        },
-
-        name: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-
-        cyrillic_name: {
-            type: DataTypes.STRING(255),
-        },
-
-        class: {
-            type: DataTypes.STRING(100),
-        },
-
-        year_from: {
-            type: DataTypes.INTEGER,
-        },
-
-        year_to: {
-            type: DataTypes.INTEGER,
         },
 
         created_at: {
@@ -54,10 +41,10 @@ const CarModel = sequelize.define(
         },
     },
     {
-        tableName: "car_models",
+        tableName: "images",
         timestamps: true,
         underscored: true,
     }
 );
 
-export default CarModel;
+export default Image;

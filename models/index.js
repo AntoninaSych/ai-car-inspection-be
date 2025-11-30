@@ -1,28 +1,55 @@
-import sequelize from '../db/sequelize.js';
+import sequelize from "../db/sequelize.js";
 
-import User from './User.js';
+import User from "./User.js";
 import CarBrand from "./CarBrand.js";
 import CarModel from "./CarModel.js";
-import CarGeneration from "./CarGeneration.js";
-import CarConfiguration from "./CarConfiguration.js";
+
+import TaskStatus from "./TaskStatus.js";
+import TaskStatusHistory from "./TaskStatusHistory.js";
+import Image from "./Image.js";
+import ImageType from "./ImageType.js";
+
+import Task from "./Task.js";
 
 
+
+// Associations -----------------------------------
+
+// Cars
 CarBrand.hasMany(CarModel, { foreignKey: "brand_id" });
 CarModel.belongsTo(CarBrand, { foreignKey: "brand_id" });
 
-CarModel.hasMany(CarGeneration, { foreignKey: "model_id" });
-CarGeneration.belongsTo(CarModel, { foreignKey: "model_id" });
 
-CarGeneration.hasMany(CarConfiguration, { foreignKey: "generation_id" });
-CarConfiguration.belongsTo(CarGeneration, { foreignKey: "generation_id" });
+// Tasks
+User.hasMany(Task, { foreignKey: "owner_id" });
+Task.belongsTo(User, { foreignKey: "owner_id" });
 
-export function applyAssociations() {}
+Task.belongsTo(TaskStatus, { foreignKey: "current_status_id" });
+
+// Images
+Image.belongsTo(ImageType, { foreignKey: "image_type_id" });
+ImageType.hasMany(Image, { foreignKey: "image_type_id" });
+
+Image.belongsTo(Task, { foreignKey: "task_id" });
+Task.hasMany(Image, { foreignKey: "task_id" });
+
+// Status history
+TaskStatusHistory.belongsTo(Task, { foreignKey: "task_id" });
+Task.hasMany(TaskStatusHistory, { foreignKey: "task_id" });
+
+TaskStatusHistory.belongsTo(TaskStatus, { foreignKey: "status_id" });
+
+
+
 
 export {
     sequelize,
     User,
     CarBrand,
     CarModel,
-    CarGeneration,
-    CarConfiguration,
+    Image,
+    ImageType,
+    Task,
+    TaskStatus,
+    TaskStatusHistory
 };
