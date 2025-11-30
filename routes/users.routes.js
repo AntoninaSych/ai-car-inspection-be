@@ -4,13 +4,8 @@ import {
   getAllUsers,
   getCurrentUserInfo,
   getUserInfo,
-  followUser,
-  unfollowUser,
   getCurrent,
-  changeAvatar,
-  getUserFollowers,
-  followers,
-  following,
+  changeAvatar
 } from "../controllers/users.controller.js";
 import upload from "../middlewares/upload.js";
 import { login, logout, register } from "../controllers/authController.js";
@@ -83,19 +78,11 @@ router.get("/", auth, getAllUsers);
  *                       type: string
  *                     avatar:
  *                       type: string
- *                 createdRecipes:
- *                   type: integer
- *                 favorites:
- *                   type: integer
- *                 followers:
- *                    type: integer
- *                 following:
- *                    type: integer
  *       401:
  *         description: Unauthorized
  */
 
-router.get("/current_details", auth, getCurrentUserInfo);
+router.get("/profile", auth, getCurrentUserInfo);
 
 /**
  * @swagger
@@ -166,154 +153,6 @@ router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
  */
 router.get("/current", auth, getCurrent);
 
-/**
- * @swagger
- * /api/users/{id}/follow:
- *   post:
- *     summary: Follow a user
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: ID of the user to follow
- *     responses:
- *       200:
- *         description: Successfully followed the user
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Now following user 123e4567-e89b-12d3-a456-426614174000
- *       400:
- *         description: Bad request (e.g. trying to follow oneself)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Unauthorized (no or invalid JWT)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: User to follow not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-
-router.post("/:id/follow", auth, followUser);
-
-/**
- * @swagger
- * /api/users/{id}/follow:
- *   delete:
- *     summary: Unfollow a user
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: ID of the user to unfollow
- *     responses:
- *       200:
- *         description: Successfully unfollowed the user
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Unfollowed user 123e4567-e89b-12d3-a456-426614174000
- *       400:
- *         description: Bad request (e.g. trying to unfollow oneself)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Unauthorized (no or invalid JWT)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: User to unfollow not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.delete("/:id/follow", auth, unfollowUser);
-
-/**
- * @swagger
- * /api/users/followers:
- *   get:
- *     summary: Get current user's followers
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: A list of users who follow the current user
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
- *       401:
- *         description: Unauthorized (no or invalid JWT)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.get("/followers", auth, followers);
-
-/**
- * @swagger
- * /api/users/following:
- *   get:
- *     summary: Get current user's followings
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: A list of users who the current user follows
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
- *       401:
- *         description: Unauthorized (no or invalid JWT)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.get("/following", auth, following);
 
 /**
  * @swagger
@@ -350,12 +189,6 @@ router.get("/following", auth, following);
  *                       type: string
  *                     avatar:
  *                       type: string
- *                 createdRecipes:
- *                   type: integer
- *                 favorites:
- *                   type: integer
- *                 followers:
- *                    type: integer
  *       401:
  *         description: Unauthorized
  *       404:
@@ -363,46 +196,6 @@ router.get("/following", auth, following);
  */
 
 router.get("/:id", auth, getUserInfo);
-
-/**
- * @swagger
- * /api/users/{id}/followers:
- *   get:
- *     summary: Get user's followers
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: ID of the user
- *     responses:
- *       200:
- *         description: A list of users who follow the user
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
- *       401:
- *         description: Unauthorized (no or invalid JWT)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.get("/:id/followers", auth, getUserFollowers);
 
 /**
  * @swagger

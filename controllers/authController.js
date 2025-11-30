@@ -40,6 +40,7 @@ export const register = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate gravatar avatar
     const gravatarUrl = gravatar.url(email, { s: "250", d: "retro" }, true);
     const avatarFilename = `${uuidv4()}.jpg`;
     const avatarPath = path.join(AVATARS_DIR, avatarFilename);
@@ -48,9 +49,7 @@ export const register = async (req, res, next) => {
     await fs.mkdir(AVATARS_DIR, { recursive: true });
     await fs.writeFile(avatarPath, response.data);
 
-    const host = process.env.DB_HOST || 'localhost';
-    const port = process.env.PORT || 3000;
-    const avatarURL = `http://${host}:${port}/public/images/avatars/${avatarFilename}`;
+    const avatarURL = `${process.env.APP_URL}/public/images/avatars/${avatarFilename}`;
 
     const newUser = await User.create({
       name,
@@ -77,6 +76,7 @@ export const register = async (req, res, next) => {
     next(err);
   }
 };
+
 
 export const login = async (req, res, next) => {
   try {
