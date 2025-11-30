@@ -45,9 +45,9 @@ const swaggerOptions = {
       },
     },
     info: {
-      title: "Foodies API",
+      title: "AI Car API",
       version: "1.0.0",
-      description: "API documentation for Foodies application",
+      description: "API documentation for AI Car application",
     },
     servers: [
       {
