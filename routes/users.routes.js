@@ -255,11 +255,14 @@ router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Andy
  *               email:
  *                 type: string
+ *                 example: andy@gmail.com
  *               password:
  *                 type: string
  *                 format: password
+ *                 example: password123
  *     responses:
  *       201:
  *         description: User created successfully
@@ -268,6 +271,7 @@ router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
  *       409:
  *         description: Email already in use
  */
+
 router.post("/register", register);
 
 /**
@@ -288,7 +292,7 @@ router.post("/register", register);
  *             properties:
  *               email:
  *                 type: string
- *                 example: admin@foodies.com
+ *                 example: andy@gmail.com
  *               password:
  *                 type: string
  *                 format: password
@@ -301,6 +305,7 @@ router.post("/register", register);
  *       401:
  *         description: Unauthorized
  */
+
 router.post("/login", login);
 
 /**
