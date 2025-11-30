@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import usersRouter from "./routes/users.routes.js";
+import carsRouter from "./routes/cars.routes.js";
 import HttpError from "./helpers/HttpError.js";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(cors());
 app.options("*", cors());
 app.use(logger("dev"));
 app.use(express.json());
+app.use("/api/cars", carsRouter);
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(
     "/avatars",
