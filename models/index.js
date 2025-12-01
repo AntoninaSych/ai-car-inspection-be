@@ -10,6 +10,7 @@ import Image from "./Image.js";
 import ImageType from "./ImageType.js";
 
 import Task from "./Task.js";
+import Report from "./Report.js";
 
 
 
@@ -39,7 +40,9 @@ Task.hasMany(TaskStatusHistory, { foreignKey: "task_id" });
 
 TaskStatusHistory.belongsTo(TaskStatus, { foreignKey: "status_id" });
 
-
+// Reports
+Report.belongsTo(Task, { foreignKey: "task_id" });
+Task.hasMany(Report, { foreignKey: "task_id" });
 
 
 export {
@@ -51,5 +54,6 @@ export {
     ImageType,
     Task,
     TaskStatus,
-    TaskStatusHistory
+    TaskStatusHistory,
+    Report
 };

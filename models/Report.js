@@ -10,19 +10,19 @@ const Report = sequelize.define(
             primaryKey: true,
         },
 
-        url: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-
-        report_type: {
-            type: DataTypes.STRING(100),
-            allowNull: true,
-        },
-
         task_id: {
             type: DataTypes.UUID,
             allowNull: false,
+        },
+
+        data: {
+            type: DataTypes.JSONB,
+            allowNull: false,
+        },
+
+        url: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
         },
 
         created_at: {

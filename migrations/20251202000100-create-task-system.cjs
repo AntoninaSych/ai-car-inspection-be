@@ -245,19 +245,20 @@ module.exports = {
                 type: Sequelize.UUID,
                 defaultValue: Sequelize.UUIDV4
             },
-            url: {
-                type: Sequelize.STRING(255),
-                allowNull: false,
-            },
-            report_type: {
-                type: Sequelize.STRING(100),
-            },
             task_id: {
                 type: Sequelize.UUID,
                 allowNull: false,
                 references: { model: "tasks", key: "id" },
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
+            },
+            data: {
+                type: Sequelize.JSONB,
+                allowNull: false,
+            },
+            url: {
+                type: Sequelize.STRING(255),
+                allowNull: true,
             },
             created_at: {
                 type: Sequelize.DATE,

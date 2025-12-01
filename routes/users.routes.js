@@ -2,7 +2,6 @@ import { Router } from "express";
 import auth from "../middlewares/auth.js";
 import {
   getAllUsers,
-  getCurrentUserInfo,
   getUserInfo,
   getCurrent,
   changeAvatar
@@ -53,79 +52,6 @@ router.get("/", auth, getAllUsers);
 
 /**
  * @swagger
- * /api/users/current_details:
- *   get:
- *     summary: Get current user info
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Object User
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     avatar:
- *                       type: string
- *       401:
- *         description: Unauthorized
- */
-
-router.get("/profile", auth, getCurrentUserInfo);
-
-/**
- * @swagger
- * /api/users/avatars:
- *   patch:
- *     summary: Upload user avatar
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     consumes:
- *       - multipart/form-data
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - avatar
- *             properties:
- *               avatar:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Avatar updated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 avatarURL:
- *                   type: string
- *       400:
- *         description: File upload error
- *       401:
- *         description: Unauthorized
- */
-
-router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
-
-/**
- * @swagger
  * /api/users/current:
  *   get:
  *     summary: Get current logged-in user
@@ -153,6 +79,42 @@ router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
  */
 router.get("/current", auth, getCurrent);
 
+/**
+ * @swagger
+ * /api/users/avatars:
+ *   patch:
+ *     summary: Upload user avatar
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - avatar
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Avatar updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 avatarURL:
+ *                   type: string
+ *       400:
+ *         description: File upload error
+ *       401:
+ *         description: Unauthorized
+ */
+router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
 
 /**
  * @swagger
@@ -196,45 +158,6 @@ router.get("/current", auth, getCurrent);
  */
 
 router.get("/:id", auth, getUserInfo);
-
-/**
- * @swagger
- * /api/users/avatars:
- *   patch:
- *     summary: Upload user avatar
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     consumes:
- *       - multipart/form-data
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - avatar
- *             properties:
- *               avatar:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Avatar updated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 avatarURL:
- *                   type: string
- *       400:
- *         description: File upload error
- *       401:
- *         description: Unauthorized
- */
-router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
 
 /**
  * @swagger

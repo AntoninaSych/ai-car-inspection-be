@@ -1,6 +1,6 @@
 import { Router } from "express";
 import auth from "../middlewares/auth.js";
-import { createTask } from "../controllers/taskController.js";
+import { createTask, getCurrentUserTasks } from "../controllers/taskController.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -140,5 +140,36 @@ router.post(
     ]),
     createTask
 );
+
+/**
+ * @swagger
+ * /api/tasks/current:
+ *   get:
+ *     summary: Get current user's tasks
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user's tasks
+ *         content:
+ *           application/json:
+ *             example:
+ *               ok: true
+ *               tasks:
+ *                 - id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
+ *                   brand: "Toyota"
+ *                   model: "Camry"
+ *                   year: 2020
+ *                   mileage: 50000
+ *                   description: "Some scratches on the front bumper"
+ *                   status: "processed"
+ *                   is_paid: true
+ *                   created_at: "2024-01-15T10:00:00Z"
+ *                   updated_at: "2024-01-15T10:30:00Z"
+ *       403:
+ *         description: Permission denied
+ */
+router.get("/current", auth, getCurrentUserTasks);
 
 export default router;
