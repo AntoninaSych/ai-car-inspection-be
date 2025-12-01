@@ -1,6 +1,7 @@
 "use strict";
 
 const { v4: uuidv4 } = require("uuid");
+const {INTEGER} = require("sequelize");
 
 module.exports = {
     async up(queryInterface, Sequelize) {
@@ -97,7 +98,16 @@ module.exports = {
                 onUpdate: "CASCADE",
                 onDelete: "SET NULL",
             },
-
+            year: {
+                type: INTEGER,
+                allowNull: true,
+                defaultValue: null,
+            },
+            mileage: {
+                type: INTEGER,
+                allowNull: true,
+                defaultValue: null,
+            },
             description: {
                 type: Sequelize.TEXT,
                 allowNull: true,

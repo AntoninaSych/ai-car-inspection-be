@@ -19,6 +19,14 @@ const Task = sequelize.define(
             type: DataTypes.UUID,
             allowNull: true,
         },
+        year: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        mileage: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
 
         description: {
             type: DataTypes.TEXT,
