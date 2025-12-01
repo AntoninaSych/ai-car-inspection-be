@@ -3,10 +3,8 @@ dotenv.config({ path: "./.env" });
 
 import app from './app.js';
 import { connectDB } from './db/sequelize.js';
-import cors from "cors";
 
 const PORT = process.env.PORT || 5001;
-app.use(cors());
 
 const start = async () => {
     try {
