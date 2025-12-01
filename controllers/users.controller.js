@@ -20,25 +20,6 @@ export const getAllUsers = async (req, res, next) => {
 };
 
 
-export const getCurrentUserInfo = async (req, res, next) => {
-  try {
-    const { id, name, email, avatarURL } = req.user;
-
- console.log(process.env.APP_URL);
-    const fullAvatarUrl = avatarURL
-        ? avatarURL
-        : `${process.env.APP_URL}${defaultAvatar}`;
-
-
-    res.status(200).json({
-      user: { id, name, email, avatarURL: fullAvatarUrl }
-    });
-  } catch (err) {
-    next(err.status ? err : HttpError(500, err.message));
-  }
-};
-
-
 export const getUserInfo = async (req, res, next) => {
   try {
     const { id } = req.params;
