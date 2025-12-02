@@ -1,6 +1,7 @@
 import { Task, Image, CarBrand, CarModel, TaskStatus, ImageType, Report } from "../models/index.js";
 import HttpError from "../helpers/HttpError.js";
 import { v4 as uuidv4 } from "uuid";
+import { analyzeCarImages } from "../services/geminiService.js";
 
 export const createTask = async (req, res, next) => {
     try {
@@ -86,6 +87,162 @@ export const createTask = async (req, res, next) => {
     }
 };
 
+export const processTask = async (req, res, next) => {
+    try {
+        const { taskId } = req.params;
+
+        // Find task with all related data
+        const task = await Task.findByPk(taskId, {
+            include: [
+                {
+                    model: Image,
+                    include: [ImageType]
+                },
+                { model: CarBrand },
+                { model: CarModel },
+                { model: Report }
+            ]
+        });
+
+        if (!task) {
+            return next(HttpError(404, "Task not found"));
+        }
+
+        // Check if user owns this task
+        if (task.owner_id !== req.user.id) {
+            return next(HttpError(403, "You don't have permission to process this task"));
+        }
+
+        // Check if task is paid
+        if (!task.is_paid) {
+            return next(HttpError(402, "Payment required. Task must be paid before processing."));
+        }
+
+        // Check if task already has a report
+        const existingReport = task.Reports?.[0];
+        if (existingReport) {
+            return res.status(200).json({
+                ok: true,
+                message: "Task already processed",
+                task_id: task.id,
+                report_id: existingReport.id
+            });
+        }
+
+        // Prepare images object
+        const images = {};
+        task.Images.forEach(img => {
+            const typeName = img.ImageType?.name;
+            if (typeName) {
+                images[typeName] = img.local_path;
+            }
+        });
+
+        if (Object.keys(images).length === 0) {
+            return next(HttpError(400, "No images found for this task"));
+        }
+
+        // Prepare car info
+        const carInfo = {
+            brand: task.CarBrand?.name || 'Unknown',
+            model: task.CarModel?.name || 'Unknown',
+            year: task.year,
+            mileage: task.mileage,
+            description: task.description
+        };
+
+        // Call Gemini API
+        const analysisResult = await analyzeCarImages(images, carInfo);
+
+        // Create report with analysis
+        const report = await Report.create({
+            id: uuidv4(),
+            task_id: task.id,
+            data: analysisResult,
+        });
+
+        // Update task status
+        const processedStatus = await TaskStatus.findOne({ where: { name: "processed" } });
+        if (processedStatus) {
+            await task.update({ current_status_id: processedStatus.id });
+        }
+
+        return res.status(200).json({
+            ok: true,
+            message: "Task processed successfully",
+            task_id: task.id,
+            report_id: report.id
+        });
+
+    } catch (err) {
+        console.error("Process task error:", err);
+        next(err);
+    }
+};
+
+export const getTask = async (req, res, next) => {
+    try {
+        const { taskId } = req.params;
+
+        const task = await Task.findByPk(taskId, {
+            include: [
+                {
+                    model: Image,
+                    include: [ImageType]
+                },
+                { model: CarBrand },
+                { model: CarModel },
+                { model: TaskStatus },
+                { model: Report }
+            ]
+        });
+
+        if (!task) {
+            return next(HttpError(404, "Task not found"));
+        }
+
+        // Check if user owns this task
+        if (task.owner_id !== req.user.id) {
+            return next(HttpError(403, "You don't have permission to view this task"));
+        }
+
+        // Get first report (AI analysis)
+        const aiReport = task.Reports?.[0];
+
+        return res.status(200).json({
+            ok: true,
+            task: {
+                id: task.id,
+                brand: task.CarBrand?.name,
+                model: task.CarModel?.name,
+                year: task.year,
+                mileage: task.mileage,
+                description: task.description,
+                status: task.TaskStatus?.name,
+                is_paid: task.is_paid,
+                images: task.Images.map(img => ({
+                    id: img.id,
+                    type: img.ImageType?.name,
+                    path: img.local_path,
+                    verified: img.verified
+                })),
+                reports: task.Reports?.map(r => ({
+                    id: r.id,
+                    data: r.data,
+                    url: r.url,
+                    created_at: r.created_at
+                })),
+                ai_analysis: aiReport?.data || null,
+                created_at: task.created_at,
+                updated_at: task.updated_at
+            }
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const getCurrentUserTasks = async (req, res, next) => {
     try {
         const tasks = await Task.findAll({
@@ -112,6 +269,41 @@ export const getCurrentUserTasks = async (req, res, next) => {
                 created_at: task.created_at,
                 updated_at: task.updated_at
             }))
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const payTask = async (req, res, next) => {
+    try {
+        const { taskId } = req.params;
+
+        const task = await Task.findByPk(taskId);
+
+        if (!task) {
+            return next(HttpError(404, "Task not found"));
+        }
+
+        if (task.owner_id !== req.user.id) {
+            return next(HttpError(403, "You don't have permission to pay for this task"));
+        }
+
+        if (task.is_paid) {
+            return res.status(200).json({
+                ok: true,
+                message: "Task is already paid",
+                task_id: task.id
+            });
+        }
+
+        await task.update({ is_paid: true });
+
+        return res.status(200).json({
+            ok: true,
+            message: "Payment successful",
+            task_id: task.id
         });
 
     } catch (err) {
