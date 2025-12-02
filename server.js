@@ -20,7 +20,7 @@ const start = async () => {
 
         app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`🚀 Swagger running at http://localhost:${PORT}/api-docs/`);
+            console.log(`🚀 Swagger running at ${process.env.APP_URL}/api-docs/`);
         });
     } catch (err) {
         console.error('❌ Failed to start server:', err.message);

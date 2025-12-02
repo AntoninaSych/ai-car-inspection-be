@@ -1,6 +1,6 @@
 import { Router } from "express";
 import auth from "../middlewares/auth.js";
-import { createTask, getCurrentUserTasks } from "../controllers/taskController.js";
+import { createTask, processTask, getTask, getCurrentUserTasks, payTask } from "../controllers/taskController.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -171,5 +171,112 @@ router.post(
  *         description: Permission denied
  */
 router.get("/current", auth, getCurrentUserTasks);
+
+/**
+ * @swagger
+ * /api/tasks/{taskId}:
+ *   get:
+ *     summary: Get task details with AI analysis
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task UUID
+ *     responses:
+ *       200:
+ *         description: Task details retrieved successfully
+ *       403:
+ *         description: Permission denied
+ *       404:
+ *         description: Task not found
+ */
+router.get("/:taskId", auth, getTask);
+
+/**
+ * @swagger
+ * /api/tasks/{taskId}/process:
+ *   post:
+ *     summary: Process task with AI analysis
+ *     description: Processes a task using AI to analyze car images and creates a report. Returns the task and report IDs.
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Task UUID
+ *     responses:
+ *       200:
+ *         description: Task processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 task_id:
+ *                   type: string
+ *                   format: uuid
+ *                 report_id:
+ *                   type: string
+ *                   format: uuid
+ *             example:
+ *               ok: true
+ *               message: "Task processed successfully"
+ *               task_id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
+ *               report_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+ *       400:
+ *         description: No images found for this task
+ *       402:
+ *         description: Payment required - task must be paid before processing
+ *       403:
+ *         description: Permission denied
+ *       404:
+ *         description: Task not found
+ */
+router.post("/:taskId/process", auth, processTask);
+
+/**
+ * @swagger
+ * /api/tasks/{taskId}/pay:
+ *   post:
+ *     summary: Pay for a task
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task UUID
+ *     responses:
+ *       200:
+ *         description: Payment successful
+ *         content:
+ *           application/json:
+ *             example:
+ *               ok: true
+ *               message: "Payment successful"
+ *               task_id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
+ *       403:
+ *         description: Permission denied
+ *       404:
+ *         description: Task not found
+ */
+router.post("/:taskId/pay", auth, payTask);
 
 export default router;

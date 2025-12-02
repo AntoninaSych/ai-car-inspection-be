@@ -27,6 +27,12 @@ Task.belongsTo(User, { foreignKey: "owner_id" });
 
 Task.belongsTo(TaskStatus, { foreignKey: "current_status_id" });
 
+Task.belongsTo(CarBrand, { foreignKey: "brand_id" });
+CarBrand.hasMany(Task, { foreignKey: "brand_id" });
+
+Task.belongsTo(CarModel, { foreignKey: "model_id" });
+CarModel.hasMany(Task, { foreignKey: "model_id" });
+
 // Images
 Image.belongsTo(ImageType, { foreignKey: "image_type_id" });
 ImageType.hasMany(Image, { foreignKey: "image_type_id" });
