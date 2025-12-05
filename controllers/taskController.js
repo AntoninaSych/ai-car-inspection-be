@@ -300,11 +300,8 @@ export const payTask = async (req, res, next) => {
 
         await task.update({ is_paid: true });
 
-        return res.status(200).json({
-            ok: true,
-            message: "Payment successful",
-            task_id: task.id
-        });
+        // Automatically process the task after successful payment
+        return processTask(req, res, next);
 
     } catch (err) {
         next(err);
