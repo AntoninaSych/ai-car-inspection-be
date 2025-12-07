@@ -165,6 +165,35 @@ router.post(
  *                   description: "Some scratches on the front bumper"
  *                   status: "processed"
  *                   is_paid: true
+ *                   images:
+ *                     - id: "img-uuid-1"
+ *                       type: "front"
+ *                       path: "uploads/tasks/front-123.jpg"
+ *                       verified: true
+ *                     - id: "img-uuid-2"
+ *                       type: "back"
+ *                       path: "uploads/tasks/back-456.jpg"
+ *                       verified: false
+ *                   reports:
+ *                     - id: "report-uuid-1"
+ *                       data:
+ *                         damage_detected: true
+ *                         damages:
+ *                           - location: "Front bumper"
+ *                             severity: "minor"
+ *                             description: "Surface scratches on lower section"
+ *                             estimated_parts_cost_original: "$150-200"
+ *                             estimated_parts_cost_alternative: "$80-120"
+ *                             estimated_labor_cost: "$50-100"
+ *                         recommendations:
+ *                           - "Polish minor scratches"
+ *                           - "Consider touch-up paint for deeper marks"
+ *                         estimated_total_parts_cost_original: "$150-200"
+ *                         estimated_total_parts_cost_alternative: "$80-120"
+ *                         estimated_total_labor_cost: "$50-100"
+ *                         summary: "Minor cosmetic damage on front bumper"
+ *                       url: null
+ *                       created_at: "2024-01-15T10:30:00Z"
  *                   created_at: "2024-01-15T10:00:00Z"
  *                   updated_at: "2024-01-15T10:30:00Z"
  *       403:
@@ -176,7 +205,7 @@ router.get("/current", auth, getCurrentUserTasks);
  * @swagger
  * /api/tasks/{taskId}:
  *   get:
- *     summary: Get task details with AI analysis
+ *     summary: Get task details with images and reports
  *     tags: [Tasks]
  *     security:
  *       - bearerAuth: []
@@ -190,6 +219,50 @@ router.get("/current", auth, getCurrentUserTasks);
  *     responses:
  *       200:
  *         description: Task details retrieved successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               ok: true
+ *               task:
+ *                 id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
+ *                 brand: "Toyota"
+ *                 model: "Camry"
+ *                 year: 2020
+ *                 mileage: 50000
+ *                 description: "Some scratches on the front bumper"
+ *                 status: "processed"
+ *                 is_paid: true
+ *                 images:
+ *                   - id: "img-uuid-1"
+ *                     type: "front"
+ *                     path: "uploads/tasks/front-123.jpg"
+ *                     verified: true
+ *                   - id: "img-uuid-2"
+ *                     type: "back"
+ *                     path: "uploads/tasks/back-456.jpg"
+ *                     verified: false
+ *                 reports:
+ *                   - id: "report-uuid-1"
+ *                     data:
+ *                       damage_detected: true
+ *                       damages:
+ *                         - location: "Front bumper"
+ *                           severity: "minor"
+ *                           description: "Surface scratches on lower section"
+ *                           estimated_parts_cost_original: "$150-200"
+ *                           estimated_parts_cost_alternative: "$80-120"
+ *                           estimated_labor_cost: "$50-100"
+ *                       recommendations:
+ *                         - "Polish minor scratches"
+ *                         - "Consider touch-up paint for deeper marks"
+ *                       estimated_total_parts_cost_original: "$150-200"
+ *                       estimated_total_parts_cost_alternative: "$80-120"
+ *                       estimated_total_labor_cost: "$50-100"
+ *                       summary: "Minor cosmetic damage on front bumper"
+ *                     url: null
+ *                     created_at: "2024-01-15T10:30:00Z"
+ *                 created_at: "2024-01-15T10:00:00Z"
+ *                 updated_at: "2024-01-15T10:30:00Z"
  *       403:
  *         description: Permission denied
  *       404:

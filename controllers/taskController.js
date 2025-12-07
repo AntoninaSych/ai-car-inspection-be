@@ -3,6 +3,31 @@ import HttpError from "../helpers/HttpError.js";
 import { v4 as uuidv4 } from "uuid";
 import { analyzeCarImages } from "../services/geminiService.js";
 
+const formatTask = (task) => ({
+    id: task.id,
+    brand: task.CarBrand?.name,
+    model: task.CarModel?.name,
+    year: task.year,
+    mileage: task.mileage,
+    description: task.description,
+    status: task.TaskStatus?.name,
+    is_paid: task.is_paid,
+    images: task.Images?.map(img => ({
+        id: img.id,
+        type: img.ImageType?.name,
+        path: img.local_path,
+        verified: img.verified
+    })),
+    reports: task.Reports?.map(r => ({
+        id: r.id,
+        data: r.data,
+        url: r.url,
+        created_at: r.created_at
+    })),
+    created_at: task.created_at,
+    updated_at: task.updated_at
+});
+
 export const createTask = async (req, res, next) => {
     try {
         const { brand_id, model_id, description, year, mileage } = req.body;
@@ -206,36 +231,9 @@ export const getTask = async (req, res, next) => {
             return next(HttpError(403, "You don't have permission to view this task"));
         }
 
-        // Get first report (AI analysis)
-        const aiReport = task.Reports?.[0];
-
         return res.status(200).json({
             ok: true,
-            task: {
-                id: task.id,
-                brand: task.CarBrand?.name,
-                model: task.CarModel?.name,
-                year: task.year,
-                mileage: task.mileage,
-                description: task.description,
-                status: task.TaskStatus?.name,
-                is_paid: task.is_paid,
-                images: task.Images.map(img => ({
-                    id: img.id,
-                    type: img.ImageType?.name,
-                    path: img.local_path,
-                    verified: img.verified
-                })),
-                reports: task.Reports?.map(r => ({
-                    id: r.id,
-                    data: r.data,
-                    url: r.url,
-                    created_at: r.created_at
-                })),
-                ai_analysis: aiReport?.data || null,
-                created_at: task.created_at,
-                updated_at: task.updated_at
-            }
+            task: formatTask(task)
         });
 
     } catch (err) {
@@ -248,27 +246,21 @@ export const getCurrentUserTasks = async (req, res, next) => {
         const tasks = await Task.findAll({
             where: { owner_id: req.user.id },
             include: [
+                {
+                    model: Image,
+                    include: [ImageType]
+                },
                 { model: CarBrand },
                 { model: CarModel },
-                { model: TaskStatus }
+                { model: TaskStatus },
+                { model: Report }
             ],
             order: [["created_at", "DESC"]]
         });
 
         return res.status(200).json({
             ok: true,
-            tasks: tasks.map(task => ({
-                id: task.id,
-                brand: task.CarBrand?.name,
-                model: task.CarModel?.name,
-                year: task.year,
-                mileage: task.mileage,
-                description: task.description,
-                status: task.TaskStatus?.name,
-                is_paid: task.is_paid,
-                created_at: task.created_at,
-                updated_at: task.updated_at
-            }))
+            tasks: tasks.map(formatTask)
         });
 
     } catch (err) {
