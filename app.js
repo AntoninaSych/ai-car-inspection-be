@@ -12,7 +12,7 @@ import HttpError from "./helpers/HttpError.js";
 import imagesRouter from "./routes/images.routes.js";
 import tasksRouter from "./routes/tasks.routes.js";
 import reportsRouter from "./routes/reports.routes.js";
-
+import stripeRouter from "./routes/stripe.routes.js";
 
 
 dotenv.config();
@@ -38,6 +38,10 @@ app.use("/api/images", imagesRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/users", usersRouter);
+
+// Stripe demo
+app.use("/api/stripe", stripeRouter);
+
 const PORT = process.env.PORT || 5000;
 const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 
