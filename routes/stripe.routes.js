@@ -1,9 +1,5 @@
 import { Router } from "express";
-import {
-    createCheckoutSession,
-    getCheckoutSession,
-    confirmCheckoutSession,
-} from "../controllers/stripeController.js";
+import { createCheckoutSession, getCheckoutSession } from "../controllers/stripeController.js";
 
 const router = Router();
 
@@ -11,14 +7,14 @@ const router = Router();
  * @swagger
  * tags:
  *   name: Stripe
- *   description: Stripe Checkout demo endpoints
+ *   description: Stripe Checkout endpoints
  */
 
 /**
  * @swagger
  * /api/stripe/checkout-session:
  *   post:
- *     summary: Create Stripe Checkout session (demo)
+ *     summary: Create Stripe Checkout session
  *     tags: [Stripe]
  *     requestBody:
  *       required: true
@@ -32,7 +28,7 @@ const router = Router();
  *             properties:
  *               task_id:
  *                 type: string
- *                 example: "demo-123"
+ *                 example: "1"
  *               amount:
  *                 type: integer
  *                 example: 2000
@@ -72,7 +68,7 @@ router.post("/checkout-session", (req, res, next) => {
  * @swagger
  * /api/stripe/checkout-session/{sessionId}:
  *   get:
- *     summary: Get Stripe Checkout session details (demo)
+ *     summary: Get Stripe Checkout session details
  *     tags: [Stripe]
  *     parameters:
  *       - in: path
@@ -80,7 +76,7 @@ router.post("/checkout-session", (req, res, next) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: Stripe session id (cs_*)
+ *         description: Stripe Checkout Session ID (cs_*)
  *     responses:
  *       200:
  *         description: Session details
@@ -97,18 +93,16 @@ router.post("/checkout-session", (req, res, next) => {
  *                   properties:
  *                     id:
  *                       type: string
+ *                     status:
+ *                       type: string
  *                     payment_status:
  *                       type: string
- *                       example: "paid"
  *                     amount_total:
  *                       type: integer
- *                       example: 2000
  *                     currency:
  *                       type: string
- *                       example: "gbp"
  *                     client_reference_id:
  *                       type: string
- *                       example: "demo-123"
  *                     metadata:
  *                       type: object
  *                       additionalProperties: true
@@ -119,72 +113,6 @@ router.post("/checkout-session", (req, res, next) => {
  */
 router.get("/checkout-session/:sessionId", (req, res, next) => {
     getCheckoutSession(req, res, next).catch(next);
-});
-
-/**
- * @swagger
- * /api/stripe/confirm:
- *   post:
- *     summary: Confirm Checkout session and mark task as paid
- *     description: >
- *       Use this after redirect to success page. Backend retrieves session from Stripe,
- *       verifies status is complete/paid and marks the Task as paid using task_id from metadata.
- *     tags: [Stripe]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - session_id
- *             properties:
- *               session_id:
- *                 type: string
- *                 example: "cs_test_123456789"
- *     responses:
- *       200:
- *         description: Task marked as paid
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
- *                 task_id:
- *                   type: string
- *                   example: "demo-123"
- *                 is_paid:
- *                   type: boolean
- *                   example: true
- *                 stripe:
- *                   type: object
- *                   properties:
- *                     session_id:
- *                       type: string
- *                       example: "cs_test_123456789"
- *                     payment_status:
- *                       type: string
- *                       example: "paid"
- *                     amount_total:
- *                       type: integer
- *                       example: 2000
- *                     currency:
- *                       type: string
- *                       example: "gbp"
- *       400:
- *         description: Validation error
- *       404:
- *         description: Task or session not found
- *       409:
- *         description: Payment not completed
- *       500:
- *         description: Server/Stripe error
- */
-router.post("/confirm", (req, res, next) => {
-    confirmCheckoutSession(req, res, next).catch(next);
 });
 
 export default router;
