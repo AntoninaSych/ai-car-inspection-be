@@ -28,10 +28,8 @@ app.use(cors());
 app.options("*", cors());
 app.use(logger("dev"));
 
-// IMPORTANT: Stripe webhook must be registered BEFORE express.json()
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
 
-// JSON for everything else
 app.use(express.json());
 
 app.use("/api/cars", carsRouter);
