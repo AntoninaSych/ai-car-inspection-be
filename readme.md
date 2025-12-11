@@ -10,3 +10,15 @@
    - ```npx sequelize-cli db:seed:undo:all```
    - ```npx sequelize-cli db:seed:all```
 5Swagger Documentation http://localhost:5001/api-docs/
+
+В отдельном терминале:
+
+```stripe login```
+```stripe listen --forward-to http://ai-car.localhost:5001/api/stripe/webhook```
+
+
+Stripe CLI выведет whsec_... — вставь его в .env как STRIPE_WEBHOOK_SECRET.
+
+Запускаешь оплату через фронт /stripe-test, платишь тестовой картой 4242 4242 4242 4242.
+
+После успешной оплаты Stripe отправит webhook → backend обновит запись tasks.is_paid = true.
