@@ -28,25 +28,23 @@ app.use(cors());
 app.options("*", cors());
 app.use(logger("dev"));
 
-app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
+app.post(
+    "/api/stripe/webhook",
+    express.raw({ type: "application/json" }),
+    stripeWebhookHandler
+);
 
 app.use(express.json());
-
-app.use("/api/cars", carsRouter);
-
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use("/avatars", express.static(path.join(__dirname, "public/images/avatars")));
 app.use(express.static("public"));
 app.use(express.static("public/images/recipies"));
-
+app.use("/api/cars", carsRouter);
 app.use("/api/images", imagesRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/users", usersRouter);
-
-// Stripe routes (Swagger docs are here)
 app.use("/api/stripe", stripeRouter);
-
 const PORT = process.env.PORT || 5000;
 const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 
@@ -67,6 +65,7 @@ const specs = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use((req, res, next) => next(HttpError(404, "Not found")));
+
 app.use((err, req, res, next) => {
   const { status = 500, message = "Server error" } = err;
   res.status(status).json({ message });
