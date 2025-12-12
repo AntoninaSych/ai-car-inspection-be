@@ -56,6 +56,7 @@ export const createCheckoutSession = async (req, res, next) => {
         process.env.STRIPE_CANCEL_URL ||
         `${getFrontendBaseUrl()}/stripe/cancel`;
 
+    // TODO add brand, model and year to line_items.price_data.product_data.name
     const session = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
@@ -72,7 +73,7 @@ export const createCheckoutSession = async (req, res, next) => {
                     currency: cur,
                     unit_amount: parsedAmount,
                     product_data: {
-                        name: `Task payment (ID: ${task.id})`,
+                        name: `Car RepAIr Report (ID: ${task.id})`,
                     },
                 },
             },
