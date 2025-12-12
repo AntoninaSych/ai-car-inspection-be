@@ -41,17 +41,16 @@ export const stripeWebhookHandler = async (req, res) => {
           if (taskId) {
             const task = await Task.findByPk(taskId);
 
-            if (!task) {
-              console.warn("Task not found for webhook taskId:", taskId);
-              return res.status(200).json({ received: true });
-            }
-
-            if (!task.is_paid) {
-              await task.update({ is_paid: true });
-              console.log("Task marked as paid:", task.id);
-              // TODO check if status is updated to paid in database and run AI process
+            if (task) {
+              if (!task.is_paid) {
+                await task.update({ is_paid: true });
+                console.log("Task marked as paid:", task.id);
+                // TODO check if status is updated - run AI process
+              } else {
+                console.log("Task already paid:", task.id);
+              }
             } else {
-              console.log("Task already paid:", task.id);
+              console.warn("Task not found for webhook taskId:", taskId);
             }
           }
           break;
