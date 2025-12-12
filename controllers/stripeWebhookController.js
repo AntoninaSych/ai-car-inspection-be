@@ -8,7 +8,6 @@ const getStripeClient = () => {
 
 export const stripeWebhookHandler = async (req, res) => {
     const stripe = getStripeClient();
-
     const signature = req.headers["stripe-signature"];
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -28,36 +27,38 @@ export const stripeWebhookHandler = async (req, res) => {
     try {
         console.log("Stripe webhook received:", event.type);
 
-        if (event.type === "checkout.session.completed") {
-            const session = event.data.object;
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object;
+          const taskId = session?.metadata?.task_id;
 
-            const taskIdRaw = session?.metadata?.task_id || session?.client_reference_id || "";
-            const taskId = String(taskIdRaw);
+          console.log("Stripe session completed:", {
+            sessionId: session.id,
+            paymentStatus: session.payment_status,
+            taskId,
+          });
 
-            console.log("Stripe session completed:", {
-                sessionId: session.id,
-                paymentStatus: session.payment_status,
-                taskId,
-            });
+          if (taskId) {
+            const task = await Task.findByPk(taskId);
 
-            if (taskId) {
-                const task = await Task.findByPk(taskId);
-
-                if (!task) {
-                    console.warn("Task not found for webhook taskId:", taskId);
-                    return res.status(200).json({ received: true });
-                }
-
-                if (!task.is_paid) {
-                    await task.update({ is_paid: true });
-                    console.log("Task marked as paid:", task.id);
-                } else {
-                    console.log("Task already paid:", task.id);
-                }
+            if (!task) {
+              console.warn("Task not found for webhook taskId:", taskId);
             }
-        }
 
-        return res.status(200).json({ received: true });
+            if (!task.is_paid) {
+              await task.update({ is_paid: true });
+              console.log("Task marked as paid:", task.id);
+              // TODO check if status is updated to paid in database and run AI process
+            } else {
+              console.log("Task already paid:", task.id);
+            }
+          }
+          break;
+        }
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+      }
+      return res.status(200).json({ received: true });
     } catch (err) {
         console.error("Stripe webhook handler failed:", err);
         return res.status(500).json({ message: "Webhook handler failed" });
