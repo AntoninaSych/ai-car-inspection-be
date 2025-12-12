@@ -43,6 +43,7 @@ export const stripeWebhookHandler = async (req, res) => {
 
             if (!task) {
               console.warn("Task not found for webhook taskId:", taskId);
+              return res.status(200).json({ received: true });
             }
 
             if (!task.is_paid) {
