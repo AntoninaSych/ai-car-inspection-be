@@ -6,6 +6,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
+import { createBullBoard } from "@bull-board/api";
+import { BullMQAdapter } from "@bull-board/api/dist/queueAdapters/bullMQ.js";
+import { ExpressAdapter } from "@bull-board/express";
 
 import usersRouter from "./routes/users.routes.js";
 import carsRouter from "./routes/cars.routes.js";
@@ -13,6 +16,7 @@ import imagesRouter from "./routes/images.routes.js";
 import tasksRouter from "./routes/tasks.routes.js";
 import reportsRouter from "./routes/reports.routes.js";
 import stripeRouter from "./routes/stripe.routes.js";
+import { taskQueue } from "./services/taskQueueService.js";
 
 import { stripeWebhookHandler } from "./controllers/stripeWebhookController.js";
 import HttpError from "./helpers/HttpError.js";
@@ -74,6 +78,15 @@ const swaggerOptions = {
 
 const specs = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+
+// Bull Board - Queue Dashboard
+const serverAdapter = new ExpressAdapter();
+serverAdapter.setBasePath("/admin/queues");
+createBullBoard({
+  queues: [new BullMQAdapter(taskQueue)],
+  serverAdapter,
+});
+app.use("/admin/queues", serverAdapter.getRouter());
 
 app.use((req, res, next) => next(HttpError(404, "Not found")));
 
