@@ -22,8 +22,8 @@ CarModel.belongsTo(CarBrand, { foreignKey: "brand_id" });
 
 
 // Tasks
-User.hasMany(Task, { foreignKey: "owner_id" });
-Task.belongsTo(User, { foreignKey: "owner_id" });
+User.hasMany(Task, { foreignKey: "owner_id", as: "tasks" });
+Task.belongsTo(User, { foreignKey: "owner_id", as: "owner" });
 
 Task.belongsTo(TaskStatus, { foreignKey: "current_status_id" });
 

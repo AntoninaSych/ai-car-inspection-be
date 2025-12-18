@@ -1,0 +1,155 @@
+import nodemailer from "nodemailer";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+// Read logo as base64
+const logoBase64 = fs.readFileSync(path.join(__dirname, "../public/logo_base64.txt"), "utf-8").trim();
+const logoDataUri = `data:image/png;base64,${logoBase64}`;
+
+// Create reusable transporter
+const createTransporter = () => {
+    if (!SMTP_USER || !SMTP_PASS) {
+        console.warn("[📧 Email] SMTP credentials not configured, emails will be logged only");
+        return null;
+    }
+
+    return nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        secure: SMTP_PORT === 465,
+        auth: {
+            user: SMTP_USER,
+            pass: SMTP_PASS,
+        },
+    });
+};
+
+const transporter = createTransporter();
+
+/**
+ * Send email notification when report is ready
+ * @param {string} toEmail - Recipient email address
+ * @param {string} userName - User's name
+ * @param {string} reportId - Report ID
+ */
+export const sendReportReadyEmail = async (toEmail, userName, reportId) => {
+    const reportUrl = `${FRONTEND_URL}/reports/${reportId}`;
+
+    const subject = "🚗 Your Car Inspection Report is Ready!";
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #ffffff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none; }
+        .logo { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .logo img { width: 48px; height: 48px; }
+        .logo-text { text-align: left; }
+        .logo-text h1 { margin: 0; font-size: 24px; color: #1a1a1a; }
+        .logo-text h1 span { color: #2563eb; }
+        .logo-text p { margin: 0; font-size: 14px; color: #6b7280; }
+        .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }
+        .button { display: inline-block; background: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 5px; }
+        .button:hover { background: #1d4ed8; }
+        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <table role="presentation" style="margin: 0 auto;">
+                <tr>
+                    <td style="padding-right: 12px;">
+                        <img src="${logoDataUri}" alt="Car RepAIr Logo" width="48" style="display: block;">
+                    </td>
+                    <td style="text-align: left;">
+                        <div style="font-size: 24px; font-weight: bold; color: #1a1a1a; margin: 0;">Car Rep<span style="color: #2563eb;">AI</span>r</div>
+                        <div style="font-size: 14px; color: #6b7280; margin: 0;">Estimator</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="content">
+            <h2>Hello${userName ? `, ${userName}` : ""}!</h2>
+            <p>Great news! Your car inspection report is now ready.</p>
+            <p>Our AI has analyzed your vehicle images and prepared a detailed damage assessment with repair cost estimates.</p>
+            <p style="text-align: center;">
+                <a href="${reportUrl}" class="button">View Report</a>
+            </p>
+        </div>
+        <div class="footer">
+            <p>This email was sent by Car RepAIr - AI-powered car inspection service.</p>
+            <p>If you have any questions, please contact our support team.</p>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+    const textContent = `
+Hello${userName ? `, ${userName}` : ""}!
+
+Great news! Your car inspection report is now ready.
+
+Our AI has analyzed your vehicle images and prepared a detailed damage assessment with repair cost estimates.
+
+View your report: ${reportUrl}
+
+---
+Car RepAIr - AI-powered car inspection service
+`;
+
+    const mailOptions = {
+        from: SMTP_FROM,
+        to: toEmail,
+        subject,
+        text: textContent,
+        html: htmlContent,
+    };
+
+    if (!transporter) {
+        console.log("📧 Would send email (SMTP not configured):");
+        console.log(`  To: ${toEmail}`);
+        console.log(`  Subject: ${subject}`);
+        console.log(`  Report URL: ${reportUrl}`);
+        return { messageId: "mock-" + Date.now(), mock: true };
+    }
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 Sent to ${toEmail}, messageId: ${info.messageId}`);
+    return info;
+};
+
+/**
+ * Verify SMTP connection
+ */
+export const verifyEmailConnection = async () => {
+    if (!transporter) {
+        console.log("📧❌ SMTP not configured, skipping verification");
+        return false;
+    }
+
+    try {
+        await transporter.verify();
+        console.log("📧 SMTP connection verified");
+        return true;
+    } catch (error) {
+        console.error("📧❌ SMTP verification failed:", error.message);
+        return false;
+    }
+};

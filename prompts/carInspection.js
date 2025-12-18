@@ -30,7 +30,7 @@ JSON structure:
   "damages": [
     {
       "location": "location in {{language}}",
-      "severity": "minor/moderate/severe/unknown",
+      "severity": "minor/moderate/severe/unknown translated to {{language}}",
       "description": "detailed description in {{language}}",
       "estimated_parts_cost_original": "approximate cost for OEM parts only in {{currencyCode}}",
       "estimated_parts_cost_alternative": "approximate cost for aftermarket parts only in {{currencyCode}}",

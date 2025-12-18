@@ -11,3 +11,13 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
     restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai-car-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis_data:/data
+    restart: always
+    command: redis-server --appendonly yes

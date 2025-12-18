@@ -20,29 +20,37 @@ const router = Router();
  *       properties:
  *         location:
  *           type: string
- *           description: Location of the damage (e.g., front bumper, door)
+ *           description: Location of the damage in local language (e.g., front bumper, door)
  *         severity:
  *           type: string
- *           enum: [minor, moderate, severe, unknown]
- *           description: Severity level of the damage
+ *           description: Severity level of the damage in local language (minor/moderate/severe/unknown)
  *         description:
  *           type: string
- *           description: Detailed description of the damage
+ *           description: Detailed description of the damage in local language
  *         estimated_parts_cost_original:
  *           type: string
- *           description: Approximate cost for OEM parts only
+ *           description: Approximate cost for OEM parts only in local currency
  *         estimated_parts_cost_alternative:
  *           type: string
- *           description: Approximate cost for aftermarket parts only
+ *           description: Approximate cost for aftermarket parts only in local currency
  *         estimated_labor_cost:
  *           type: string
- *           description: Approximate labor/repair work cost
+ *           description: Approximate labor/repair work cost in local currency
  *     ReportData:
  *       type: object
  *       properties:
  *         damage_detected:
  *           type: boolean
  *           description: Whether any damage was detected
+ *         currency:
+ *           type: string
+ *           description: Currency code used for cost estimates (e.g., USD, EUR, UAH)
+ *         region:
+ *           type: string
+ *           description: Region/country name for market context (e.g., Ukraine, Germany)
+ *         locale:
+ *           type: string
+ *           description: Locale code for the report (e.g., uk-UA, en-US)
  *         damages:
  *           type: array
  *           items:
@@ -51,19 +59,19 @@ const router = Router();
  *           type: array
  *           items:
  *             type: string
- *           description: List of recommendations for repairs
+ *           description: List of recommendations for repairs in local language
  *         estimated_total_parts_cost_original:
  *           type: string
- *           description: Total OEM parts cost
+ *           description: Total OEM parts cost in local currency
  *         estimated_total_parts_cost_alternative:
  *           type: string
- *           description: Total aftermarket parts cost
+ *           description: Total aftermarket parts cost in local currency
  *         estimated_total_labor_cost:
  *           type: string
- *           description: Total labor cost
+ *           description: Total labor cost in local currency
  *         summary:
  *           type: string
- *           description: Brief summary of the inspection
+ *           description: Brief summary of the inspection in local language
  *     Report:
  *       type: object
  *       properties:
@@ -117,20 +125,23 @@ const router = Router();
  *                   task_id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
  *                   data:
  *                     damage_detected: true
+ *                     currency: "UAH"
+ *                     region: "Ukraine"
+ *                     locale: "uk-UA"
  *                     damages:
- *                       - location: "front bumper"
- *                         severity: "minor"
- *                         description: "Small scratch on lower section"
- *                         estimated_parts_cost_original: "$200-300"
- *                         estimated_parts_cost_alternative: "$100-150"
- *                         estimated_labor_cost: "$100-150"
+ *                       - location: "передній бампер"
+ *                         severity: "незначне"
+ *                         description: "Невелика подряпина на нижній частині"
+ *                         estimated_parts_cost_original: "5000-7500 UAH"
+ *                         estimated_parts_cost_alternative: "2500-4000 UAH"
+ *                         estimated_labor_cost: "2500-4000 UAH"
  *                     recommendations:
- *                       - "Repaint affected area"
- *                       - "Check for underlying damage"
- *                     estimated_total_parts_cost_original: "$200-300"
- *                     estimated_total_parts_cost_alternative: "$100-150"
- *                     estimated_total_labor_cost: "$100-150"
- *                     summary: "Minor cosmetic damage detected on front bumper"
+ *                       - "Перефарбувати пошкоджену ділянку"
+ *                       - "Перевірити на приховані пошкодження"
+ *                     estimated_total_parts_cost_original: "5000-7500 UAH"
+ *                     estimated_total_parts_cost_alternative: "2500-4000 UAH"
+ *                     estimated_total_labor_cost: "2500-4000 UAH"
+ *                     summary: "Виявлено незначне косметичне пошкодження переднього бампера"
  *                   url: null
  *                   created_at: "2024-01-15T10:30:00Z"
  *       401:
@@ -177,19 +188,22 @@ router.get("/current", auth, getCurrentUserReports);
  *                 task_id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
  *                 data:
  *                   damage_detected: true
+ *                   currency: "UAH"
+ *                   region: "Ukraine"
+ *                   locale: "uk-UA"
  *                   damages:
- *                     - location: "front bumper"
- *                       severity: "minor"
- *                       description: "Small scratch on lower section"
- *                       estimated_parts_cost_original: "$200-300"
- *                       estimated_parts_cost_alternative: "$100-150"
- *                       estimated_labor_cost: "$100-150"
+ *                     - location: "передній бампер"
+ *                       severity: "незначне"
+ *                       description: "Невелика подряпина на нижній частині"
+ *                       estimated_parts_cost_original: "5000-7500 UAH"
+ *                       estimated_parts_cost_alternative: "2500-4000 UAH"
+ *                       estimated_labor_cost: "2500-4000 UAH"
  *                   recommendations:
- *                     - "Repaint affected area"
- *                   estimated_total_parts_cost_original: "$200-300"
- *                   estimated_total_parts_cost_alternative: "$100-150"
- *                   estimated_total_labor_cost: "$100-150"
- *                   summary: "Minor cosmetic damage detected"
+ *                     - "Перефарбувати пошкоджену ділянку"
+ *                   estimated_total_parts_cost_original: "5000-7500 UAH"
+ *                   estimated_total_parts_cost_alternative: "2500-4000 UAH"
+ *                   estimated_total_labor_cost: "2500-4000 UAH"
+ *                   summary: "Виявлено незначне косметичне пошкодження"
  *                 url: null
  *                 created_at: "2024-01-15T10:30:00Z"
  *       401:
