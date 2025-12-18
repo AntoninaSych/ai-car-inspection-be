@@ -10,6 +10,7 @@ const formatTask = (task) => ({
     year: task.year,
     mileage: task.mileage,
     description: task.description,
+    country_code: task.country_code,
     status: task.TaskStatus?.name,
     is_paid: task.is_paid,
     images: task.Images?.map(img => ({
@@ -30,7 +31,7 @@ const formatTask = (task) => ({
 
 export const createTask = async (req, res, next) => {
     try {
-        const { brand_id, model_id, description, year, mileage } = req.body;
+        const { brand_id, model_id, description, year, mileage, country_code } = req.body;
 
         const brand = await CarBrand.findByPk(brand_id);
         const model = await CarModel.findByPk(model_id);
@@ -80,6 +81,7 @@ export const createTask = async (req, res, next) => {
             description: description || null,
             year: parsedYear,
             mileage: mileage ? Number(mileage) : null,
+            country_code: country_code || null,
             owner_id: req.user.id,
             current_status_id: defaultStatus.id,
             is_paid: false,
@@ -173,7 +175,8 @@ export const processTask = async (req, res, next) => {
             model: task.CarModel?.name || 'Unknown',
             year: task.year,
             mileage: task.mileage,
-            description: task.description
+            description: task.description,
+            country_code: task.country_code
         };
 
         // Call Gemini API

@@ -19,10 +19,12 @@ const Task = sequelize.define(
             type: DataTypes.UUID,
             allowNull: true,
         },
+
         year: {
             type: DataTypes.INTEGER,
             allowNull: true,
         },
+
         mileage: {
             type: DataTypes.INTEGER,
             allowNull: true,
@@ -47,6 +49,11 @@ const Task = sequelize.define(
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false,
+        },
+
+        country_code: {
+            type: DataTypes.STRING(2),
+            allowNull: true,
         },
 
         created_at: {
