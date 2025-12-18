@@ -65,7 +65,10 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
-postgres_data
+
+# Docker data volumes
+postgres_data/
+redis_data/
 *.tmp
 # Optional npm cache directory
 .npm

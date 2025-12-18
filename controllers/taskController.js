@@ -1,7 +1,7 @@
 import { Task, Image, CarBrand, CarModel, TaskStatus, ImageType, Report } from "../models/index.js";
+import { addTaskToQueue } from "../services/taskQueueService.js";
 import HttpError from "../helpers/HttpError.js";
 import { v4 as uuidv4 } from "uuid";
-import { analyzeCarImages } from "../services/geminiService.js";
 
 const formatTask = (task) => ({
     id: task.id,
@@ -114,100 +114,6 @@ export const createTask = async (req, res, next) => {
     }
 };
 
-export const processTask = async (req, res, next) => {
-    try {
-        const { taskId } = req.params;
-
-        // Find task with all related data
-        const task = await Task.findByPk(taskId, {
-            include: [
-                {
-                    model: Image,
-                    include: [ImageType]
-                },
-                { model: CarBrand },
-                { model: CarModel },
-                { model: Report }
-            ]
-        });
-
-        if (!task) {
-            return next(HttpError(404, "Task not found"));
-        }
-
-        // Check if user owns this task
-        if (task.owner_id !== req.user.id) {
-            return next(HttpError(403, "You don't have permission to process this task"));
-        }
-
-        // Check if task is paid
-        if (!task.is_paid) {
-            return next(HttpError(402, "Payment required. Task must be paid before processing."));
-        }
-
-        // Check if task already has a report
-        const existingReport = task.Reports?.[0];
-        if (existingReport) {
-            return res.status(200).json({
-                ok: true,
-                message: "Task already processed",
-                task_id: task.id,
-                report_id: existingReport.id
-            });
-        }
-
-        // Prepare images object
-        const images = {};
-        task.Images.forEach(img => {
-            const typeName = img.ImageType?.name;
-            if (typeName) {
-                images[typeName] = img.local_path;
-            }
-        });
-
-        if (Object.keys(images).length === 0) {
-            return next(HttpError(400, "No images found for this task"));
-        }
-
-        // Prepare car info
-        const carInfo = {
-            brand: task.CarBrand?.name || 'Unknown',
-            model: task.CarModel?.name || 'Unknown',
-            year: task.year,
-            mileage: task.mileage,
-            description: task.description,
-            country_code: task.country_code
-        };
-
-        // Call Gemini API
-        const analysisResult = await analyzeCarImages(images, carInfo);
-
-        // Create report with analysis
-        const report = await Report.create({
-            id: uuidv4(),
-            task_id: task.id,
-            data: analysisResult,
-        });
-
-        // Update task status
-        const processedStatus = await TaskStatus.findOne({ where: { name: "processed" } });
-        if (processedStatus) {
-            await task.update({ current_status_id: processedStatus.id });
-        }
-
-        return res.status(200).json({
-            ok: true,
-            message: "Task processed successfully",
-            task_id: task.id,
-            report_id: report.id
-        });
-
-    } catch (err) {
-        console.error("Process task error:", err);
-        next(err);
-    }
-};
-
 export const getTask = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -285,18 +191,22 @@ export const payTask = async (req, res, next) => {
             return next(HttpError(403, "You don't have permission to pay for this task"));
         }
 
-        if (task.is_paid) {
-            return res.status(200).json({
-                ok: true,
-                message: "Task is already paid",
-                task_id: task.id
-            });
-        }
-
         await task.update({ is_paid: true });
 
-        // Automatically process the task after successful payment
-        return processTask(req, res, next);
+        // Add task to processing queue
+        try {
+            await addTaskToQueue(task.id);
+            console.log("Task added to processing queue:", task.id);
+        } catch (queueError) {
+            console.error("Failed to add task to queue:", queueError.message);
+            // Queue can be retried manually or task can be reprocessed
+        }
+
+        return res.status(200).json({
+            ok: true,
+            message: "Success",
+            task_id: task.id
+        });
 
     } catch (err) {
         next(err);

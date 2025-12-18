@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { Task } from "../models/index.js";
+import { addTaskToQueue } from "../services/taskQueueService.js";
 
 const getStripeClient = () => {
     const key = process.env.STRIPE_SECRET_KEY;
@@ -45,7 +46,16 @@ export const stripeWebhookHandler = async (req, res) => {
               if (!task.is_paid) {
                 await task.update({ is_paid: true });
                 console.log("Task marked as paid:", task.id);
-                // TODO check if status is updated - run AI process
+
+                // Add task to processing queue
+                try {
+                  await addTaskToQueue(task.id);
+                  console.log("Task added to processing queue:", task.id);
+                } catch (queueError) {
+                  console.error("Failed to add task to queue:", queueError.message);
+                  // Don't fail the webhook - task is marked as paid
+                  // Queue can be retried manually or task can be reprocessed
+                }
               } else {
                 console.log("Task already paid:", task.id);
               }
