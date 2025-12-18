@@ -57,6 +57,17 @@ const swaggerOptions = {
       description: "API documentation for AI Car application",
     },
     servers: [{ url: BASE_URL }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "Enter your JWT token",
+        },
+      },
+    },
+    security: [{ bearerAuth: [] }],
   },
   apis: [path.join(__dirname, "routes", "*.js")],
 };
