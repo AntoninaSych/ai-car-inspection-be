@@ -9,7 +9,6 @@ import swaggerJsdoc from "swagger-jsdoc";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/dist/queueAdapters/bullMQ.js";
 import { ExpressAdapter } from "@bull-board/express";
-
 import usersRouter from "./routes/users.routes.js";
 import carsRouter from "./routes/cars.routes.js";
 import imagesRouter from "./routes/images.routes.js";
@@ -20,6 +19,7 @@ import { taskQueue } from "./services/taskQueueService.js";
 
 import { stripeWebhookHandler } from "./controllers/stripeWebhookController.js";
 import HttpError from "./helpers/HttpError.js";
+import authRoutes from "./routes/auth.routes.js";
 
 dotenv.config();
 dotenv.config({ path: "./.env" });
@@ -37,8 +37,8 @@ app.post(
     express.raw({ type: "application/json" }),
     stripeWebhookHandler
 );
-
 app.use(express.json());
+app.use("/api/auth", authRoutes);
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use("/avatars", express.static(path.join(__dirname, "public/images/avatars")));
 app.use(express.static("public"));

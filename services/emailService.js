@@ -153,3 +153,50 @@ export const verifyEmailConnection = async () => {
         return false;
     }
 };
+
+/**
+ * Send password reset email
+ * @param {string} toEmail - Recipient email address
+ * @param {string} resetLink - Password reset link
+ */
+export const sendPasswordResetEmail = async (toEmail, resetLink) => {
+    const subject = "🔐 Reset your password";
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <p>Hello!</p>
+    <p>You requested a password reset.</p>
+    <p>
+        <a href="${resetLink}" style="color: #2563eb;">
+            Click here to reset your password
+        </a>
+    </p>
+    <p>This link is valid for 30 minutes.</p>
+    <p>If you didn’t request this, you can safely ignore this email.</p>
+</body>
+</html>
+`;
+
+    const mailOptions = {
+        from: SMTP_FROM,
+        to: toEmail,
+        subject,
+        html: htmlContent,
+    };
+
+    if (!transporter) {
+        console.log("📧 Would send password reset email (SMTP not configured):");
+        console.log(`  To: ${toEmail}`);
+        console.log(`  Reset link: ${resetLink}`);
+        return { messageId: "mock-" + Date.now(), mock: true };
+    }
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 Password reset email sent to ${toEmail}, messageId: ${info.messageId}`);
+    return info;
+};

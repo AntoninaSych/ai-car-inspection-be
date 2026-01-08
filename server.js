@@ -6,7 +6,10 @@ import { connectDB } from './db/sequelize.js';
 import { startWorker, stopWorker } from './services/taskQueueService.js';
 import { verifyEmailConnection } from './services/emailService.js';
 
+
+
 const PORT = process.env.PORT || 5001;
+
 
 const start = async () => {
     try {
@@ -37,7 +40,7 @@ const start = async () => {
     }
 };
 
-// Graceful shutdown
+
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received, shutting down...');
     await stopWorker();
