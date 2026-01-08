@@ -32,6 +32,30 @@ export const forgotPassword = async (req, res, next) => {
     }
 };
 
+export const validateResetPasswordToken = async (req, res, next) => {
+    try {
+        const token = (req.query?.token || "").toString();
+
+        if (!token) {
+            return res.status(200).json({ valid: false });
+        }
+
+        const user = await User.findOne({
+            where: {
+                resetPasswordToken: token,
+            },
+        });
+
+        if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) {
+            return res.status(200).json({ valid: false });
+        }
+
+        return res.status(200).json({ valid: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const resetPassword = async (req, res, next) => {
     try {
         const { token, password } = req.body;

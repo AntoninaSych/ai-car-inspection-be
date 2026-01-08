@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
     forgotPassword,
+    validateResetPasswordToken,
     resetPassword,
 } from "../controllers/passwordController.js";
 
@@ -8,12 +9,18 @@ const router = Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Password reset endpoints
+ */
+
+/**
+ * @swagger
  * /api/auth/forgot-password:
  *   post:
  *     summary: Request password reset
  *     description: Sends a password reset link to the user's email address
- *     tags:
- *       - Auth
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -41,7 +48,39 @@ const router = Router();
  *       400:
  *         description: Validation error
  */
-router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", (req, res, next) => {
+    forgotPassword(req, res, next).catch(next);
+});
+
+/**
+ * @swagger
+ * /api/auth/reset-password/validate:
+ *   get:
+ *     summary: Validate reset token
+ *     description: Validates password reset token from query string
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Password reset token
+ *     responses:
+ *       200:
+ *         description: Token validation result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: true
+ */
+router.get("/reset-password/validate", (req, res, next) => {
+    validateResetPasswordToken(req, res, next).catch(next);
+});
 
 /**
  * @swagger
@@ -49,8 +88,7 @@ router.post("/forgot-password", forgotPassword);
  *   post:
  *     summary: Reset password
  *     description: Resets user password using a valid reset token
- *     tags:
- *       - Auth
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -82,6 +120,8 @@ router.post("/forgot-password", forgotPassword);
  *       400:
  *         description: Invalid or expired token
  */
-router.post("/reset-password", resetPassword);
+router.post("/reset-password", (req, res, next) => {
+    resetPassword(req, res, next).catch(next);
+});
 
 export default router;
