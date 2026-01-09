@@ -1,6 +1,6 @@
 import { Router } from "express";
 import auth from "../middlewares/auth.js";
-import { createTask, getTask, getCurrentUserTasks, payTask } from "../controllers/taskController.js";
+import { createTask, getTask, getCurrentUserTasks, payTask, deleteTask } from "../controllers/taskController.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -140,6 +140,40 @@ router.post(
     ]),
     createTask
 );
+
+/**
+ * @swagger
+ * /api/tasks/{taskId}:
+ *   delete:
+ *     summary: Delete task with related images and reports
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task UUID
+ *     responses:
+ *       200:
+ *         description: Task deleted successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               ok: true
+ *               message: "Task deleted successfully"
+ *               task_id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
+ *       403:
+ *         description: Permission denied
+ *       404:
+ *         description: Task not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete("/:taskId", auth, deleteTask);
+
 
 /**
  * @swagger

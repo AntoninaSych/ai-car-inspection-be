@@ -114,6 +114,59 @@ export const createTask = async (req, res, next) => {
     }
 };
 
+export const deleteTask = async (req, res, next) => {
+    try {
+        const { taskId } = req.params;
+
+        const task = await Task.findByPk(taskId, {
+            include: [
+                { model: Image },
+                { model: Report },
+            ],
+        });
+
+        if (!task) {
+            return next(HttpError(404, "Task not found"));
+        }
+
+        if (task.owner_id !== req.user.id) {
+            return next(HttpError(403, "You don't have permission to delete this task"));
+        }
+
+        const filePaths = (task.Images || [])
+            .map((img) => img.local_path)
+            .filter(Boolean);
+
+        const transaction = await Task.sequelize.transaction();
+        try {
+            await Report.destroy({ where: { task_id: task.id }, transaction });
+            await Image.destroy({ where: { task_id: task.id }, transaction });
+            await Task.destroy({ where: { id: task.id }, transaction });
+            await transaction.commit();
+        } catch (dbErr) {
+            await transaction.rollback();
+            throw dbErr;
+        }
+
+        for (const p of filePaths) {
+            try {
+                if (fs.existsSync(p)) {
+                    fs.unlinkSync(p);
+                }
+            } catch (fileErr) {
+                console.warn("Failed to delete file:", p, fileErr.message);
+            }
+        }
+
+        return res.status(200).json({
+            ok: true,
+            message: "Task deleted successfully",
+            task_id: taskId,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
 export const getTask = async (req, res, next) => {
     try {
         const { taskId } = req.params;
