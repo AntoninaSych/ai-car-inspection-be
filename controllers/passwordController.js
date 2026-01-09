@@ -34,10 +34,10 @@ export const forgotPassword = async (req, res, next) => {
 
 export const validateResetPasswordToken = async (req, res, next) => {
     try {
-        const token = (req.query?.token || "").toString();
+        const token = (req.query?.token || "").toString().trim();
 
         if (!token) {
-            return res.status(200).json({ valid: false });
+            return res.status(200).json({ valid: false, reason: "invalid" });
         }
 
         const user = await User.findOne({
@@ -46,8 +46,17 @@ export const validateResetPasswordToken = async (req, res, next) => {
             },
         });
 
-        if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) {
-            return res.status(200).json({ valid: false });
+        if (!user) {
+            return res.status(200).json({ valid: false, reason: "invalid" });
+        }
+
+        // We use resetPasswordExpires === null as a marker that token was already used
+        if (user.resetPasswordExpires === null) {
+            return res.status(200).json({ valid: false, reason: "used" });
+        }
+
+        if (user.resetPasswordExpires < new Date()) {
+            return res.status(200).json({ valid: false, reason: "expired" });
         }
 
         return res.status(200).json({ valid: true });

@@ -72,11 +72,21 @@ router.post("/forgot-password", (req, res, next) => {
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 valid:
- *                   type: boolean
- *                   example: true
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     valid:
+ *                       type: boolean
+ *                       example: true
+ *                 - type: object
+ *                   properties:
+ *                     valid:
+ *                       type: boolean
+ *                       example: false
+ *                     reason:
+ *                       type: string
+ *                       enum: [used, expired, invalid]
+ *                       example: expired
  */
 router.get("/reset-password/validate", (req, res, next) => {
     validateResetPasswordToken(req, res, next).catch(next);
