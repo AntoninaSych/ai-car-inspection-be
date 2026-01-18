@@ -8,6 +8,8 @@ import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import { fileURLToPath } from "url";
 import axios from 'axios';
+import { createEmailVerifyToken } from "../services/tokenService.js";
+import { sendVerificationEmail } from "../services/emailService.js";
 
 const registerSchema = Joi.object({
   name: Joi.string().required(),
@@ -25,6 +27,7 @@ const loginSchema = Joi.object({
 });
 
 const SECRET_KEY = process.env.JWT_SECRET || "defaultsecret";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const AVATARS_DIR = path.resolve('public', 'images', 'avatars');
 
@@ -68,6 +71,16 @@ export const register = async (req, res, next) => {
 
     await newUser.update({ token });
 
+    // Send verification email (non-blocking)
+    try {
+      const { token: verifyToken } = await createEmailVerifyToken(newUser.id);
+      const verifyLink = `${FRONTEND_URL}/verify-email?token=${verifyToken}`;
+      await sendVerificationEmail(newUser.email, newUser.name, verifyLink);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError.message);
+      // Don't fail registration if email fails
+    }
+
     res.status(201).json({
       token,
       user: {
@@ -75,6 +88,7 @@ export const register = async (req, res, next) => {
         name: newUser.name,
         email: newUser.email,
         avatarURL: newUser.avatarURL,
+        emailVerified: false,
       },
     });
   } catch (err) {
@@ -109,6 +123,7 @@ export const login = async (req, res, next) => {
         name: user.name,
         email: user.email,
         avatarURL: user.avatarURL,
+        emailVerified: user.emailVerified,
       },
     });
   } catch (err) {

@@ -2,7 +2,10 @@ import { Queue, Worker } from "bullmq";
 import { Task, Image, ImageType, CarBrand, CarModel, Report, TaskStatus, User } from "../models/index.js";
 import { analyzeCarImages } from "./geminiService.js";
 import { sendReportReadyEmail } from "./emailService.js";
+import { createDirectAccessToken } from "./tokenService.js";
 import { v4 as uuidv4 } from "uuid";
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379", 10);
@@ -140,10 +143,20 @@ export const processTask = async (taskId) => {
 
     console.log(`📋 Task ${taskId} processed successfully, report: ${report.id}`);
 
-    // Send email notification to task owner
+    // Send email notification to task owner with direct access link
     if (task.owner?.email) {
         try {
-            await sendReportReadyEmail(task.owner.email, task.owner.name, report.id);
+            // Create direct access token and build URL
+            let reportUrl = `${FRONTEND_URL}/reports/${report.id}`;
+            try {
+                const { token } = await createDirectAccessToken(task.owner.id, report.id);
+                reportUrl = `${FRONTEND_URL}/direct-access?token=${token}`;
+            } catch (tokenError) {
+                console.error(`📋⚠️ Failed to create direct access token:`, tokenError.message);
+                // Fall back to regular URL without auto-login
+            }
+
+            await sendReportReadyEmail(task.owner.email, task.owner.name, reportUrl);
             console.log(`📋 Email sent to ${task.owner.email}`);
         } catch (emailError) {
             console.error(`📋❌ Failed to send email:`, emailError.message);

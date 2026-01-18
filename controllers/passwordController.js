@@ -1,7 +1,11 @@
-import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { User } from "../models/index.js";
 import { sendPasswordResetEmail } from "../services/emailService.js";
+import {
+    createPasswordResetToken,
+    validateToken,
+    TOKEN_TYPES,
+} from "../services/tokenService.js";
 
 export const forgotPassword = async (req, res, next) => {
     try {
@@ -14,12 +18,7 @@ export const forgotPassword = async (req, res, next) => {
             });
         }
 
-        const token = crypto.randomBytes(32).toString("hex");
-
-        await user.update({
-            resetPasswordToken: token,
-            resetPasswordExpires: new Date(Date.now() + 1000 * 60 * 30), // 30 minutes
-        });
+        const { token } = await createPasswordResetToken(user.id);
 
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
         const resetLink = `${frontendUrl}/reset-password?token=${token}`;
@@ -36,27 +35,10 @@ export const validateResetPasswordToken = async (req, res, next) => {
     try {
         const token = (req.query?.token || "").toString().trim();
 
-        if (!token) {
-            return res.status(200).json({ valid: false, reason: "invalid" });
-        }
+        const result = await validateToken(token, TOKEN_TYPES.PASSWORD_RESET, false);
 
-        const user = await User.findOne({
-            where: {
-                resetPasswordToken: token,
-            },
-        });
-
-        if (!user) {
-            return res.status(200).json({ valid: false, reason: "invalid" });
-        }
-
-        // We use resetPasswordExpires === null as a marker that token was already used
-        if (user.resetPasswordExpires === null) {
-            return res.status(200).json({ valid: false, reason: "used" });
-        }
-
-        if (user.resetPasswordExpires < new Date()) {
-            return res.status(200).json({ valid: false, reason: "expired" });
+        if (!result.valid) {
+            return res.status(200).json({ valid: false, reason: result.reason });
         }
 
         return res.status(200).json({ valid: true });
@@ -69,27 +51,22 @@ export const resetPassword = async (req, res, next) => {
     try {
         const { token, password } = req.body;
 
-        const user = await User.findOne({
-            where: {
-                resetPasswordToken: token,
-            },
-        });
+        // Validate and mark token as used
+        const result = await validateToken(token, TOKEN_TYPES.PASSWORD_RESET, true);
 
-        if (
-            !user ||
-            !user.resetPasswordExpires ||
-            user.resetPasswordExpires < new Date()
-        ) {
+        if (!result.valid) {
             return res.status(400).json({ message: "Invalid or expired token" });
+        }
+
+        const user = await User.findByPk(result.userId);
+
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await user.update({
-            password: hashedPassword,
-            resetPasswordToken: null,
-            resetPasswordExpires: null,
-        });
+        await user.update({ password: hashedPassword });
 
         res.json({ message: "Password updated successfully" });
     } catch (err) {

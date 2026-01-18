@@ -28,14 +28,6 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    resetPasswordToken: {
-        type: String,
-        default: null,
-    },
-    resetPasswordExpires: {
-        type: Date,
-        default: null,
-    },
     language: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -47,6 +39,11 @@ const User = sequelize.define('User', {
         defaultValue: 'usd',
     },
     agreeToPolicies: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    },
+    emailVerified: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,

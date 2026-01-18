@@ -1,5 +1,6 @@
 import { Router } from "express";
 import auth from "../middlewares/auth.js";
+import { retryTaskLimiter } from "../middlewares/rateLimiter.js";
 import { createTask, getTask, getCurrentUserTasks, payTask, deleteTask, retryTask } from "../controllers/taskController.js";
 import multer from "multer";
 import path from "path";
@@ -371,7 +372,9 @@ router.post("/:taskId/pay", auth, payTask);
  *         description: Permission denied
  *       404:
  *         description: Task not found
+ *       429:
+ *         description: Too many requests (max 3 per day)
  */
-router.post("/:taskId/retry", auth, retryTask);
+router.post("/:taskId/retry", auth, retryTaskLimiter, retryTask);
 
 export default router;
