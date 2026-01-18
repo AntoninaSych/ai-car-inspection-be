@@ -114,7 +114,7 @@ export const processTask = async (taskId) => {
     // Send email notification to task owner
     if (task.owner?.email) {
         try {
-            await sendReportReadyEmail(task.owner.email, task.owner.name, task.id, report.id);
+            await sendReportReadyEmail(task.owner.email, task.owner.name, report.id);
             console.log(`📋 Email sent to ${task.owner.email}`);
         } catch (emailError) {
             console.error(`📋❌ Failed to send email:`, emailError.message);
