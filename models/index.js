@@ -1,6 +1,7 @@
 import sequelize from "../db/sequelize.js";
 
 import User from "./User.js";
+import UserToken, { TOKEN_TYPES } from "./UserToken.js";
 import CarBrand from "./CarBrand.js";
 import CarModel from "./CarModel.js";
 
@@ -50,10 +51,16 @@ TaskStatusHistory.belongsTo(TaskStatus, { foreignKey: "status_id" });
 Report.belongsTo(Task, { foreignKey: "task_id" });
 Task.hasMany(Report, { foreignKey: "task_id" });
 
+// User Tokens
+User.hasMany(UserToken, { foreignKey: "user_id", as: "tokens" });
+UserToken.belongsTo(User, { foreignKey: "user_id" });
+
 
 export {
     sequelize,
     User,
+    UserToken,
+    TOKEN_TYPES,
     CarBrand,
     CarModel,
     Image,

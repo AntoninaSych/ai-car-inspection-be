@@ -11,7 +11,6 @@ const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Read logo as base64
 const logoBase64 = fs.readFileSync(path.join(__dirname, "../public/logo_base64.txt"), "utf-8").trim();
@@ -128,10 +127,9 @@ const transporter = createTransporter();
  * Send email notification when report is ready
  * @param {string} toEmail - Recipient email address
  * @param {string} userName - User's name
- * @param {string} reportId - Report ID
+ * @param {string} reportUrl - URL to view the report (with or without token)
  */
-export const sendReportReadyEmail = async (toEmail, userName, reportId) => {
-    const reportUrl = `${FRONTEND_URL}/reports/${reportId}`;
+export const sendReportReadyEmail = async (toEmail, userName, reportUrl) => {
     const subject = "🚗 Your Car Inspection Report is Ready!";
 
     const htmlContent = generateEmailTemplate({
@@ -235,5 +233,53 @@ export const sendPasswordResetEmail = async (toEmail, resetLink) => {
 
     const info = await transporter.sendMail(mailOptions);
     console.log(`📧 Password reset email sent to ${toEmail}, messageId: ${info.messageId}`);
+    return info;
+};
+
+/**
+ * Send email verification email
+ * @param {string} toEmail - Recipient email address
+ * @param {string} userName - User's name
+ * @param {string} verifyLink - Email verification link
+ */
+export const sendVerificationEmail = async (toEmail, userName, verifyLink) => {
+    const subject = "✉️ Verify Your Email Address";
+
+    const htmlContent = generateEmailTemplate({
+        title: `Welcome${userName ? `, ${userName}` : ""}!`,
+        content: `
+            <p>Thank you for signing up for Car RepAIr!</p>
+            <p>Please verify your email address by clicking the button below.</p>
+            <p style="color: #6b7280; font-size: 14px;">This link is valid for 7 days.</p>`,
+        buttonText: "Verify Email",
+        buttonUrl: verifyLink,
+        buttonColor: "#059669",
+    });
+
+    const textContent = generateTextTemplate({
+        greeting: `Welcome${userName ? `, ${userName}` : ""}!`,
+        content: "Thank you for signing up for Car RepAIr!\n\nPlease verify your email address by clicking the link below.\n\nThis link is valid for 7 days.",
+        linkText: "Verify your email",
+        linkUrl: verifyLink,
+    });
+
+    const mailOptions = {
+        from: SMTP_FROM,
+        to: toEmail,
+        subject,
+        text: textContent,
+        html: htmlContent,
+    };
+
+    if (!transporter) {
+        console.log("📧 Would send verification email (SMTP not configured):");
+        console.log(`  To: ${toEmail}`);
+        console.log(`  Subject: ${subject}`);
+        console.log(`  Verify link: ${verifyLink}`);
+        return { messageId: "mock-" + Date.now(), mock: true };
+    }
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 Verification email sent to ${toEmail}, messageId: ${info.messageId}`);
     return info;
 };

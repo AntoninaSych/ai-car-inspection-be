@@ -76,3 +76,18 @@ export const retryTaskLimiter = createRateLimiter({
         return req.params?.taskId || "unknown";
     },
 });
+
+/**
+ * Rate limiter for resend verification email endpoint
+ * Limits to 3 requests per email per day
+ */
+export const resendVerificationLimiter = createRateLimiter({
+    prefix: "rl:resend-verification:",
+    windowMs: 24 * 60 * 60 * 1000, // 24 hours
+    max: 3,
+    message: { message: "Too many verification requests. Please try again tomorrow." },
+    keyGenerator: (req) => {
+        const email = req.body?.email?.toLowerCase()?.trim();
+        return email || "unknown";
+    },
+});
