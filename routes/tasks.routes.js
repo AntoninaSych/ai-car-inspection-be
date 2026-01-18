@@ -1,6 +1,6 @@
 import { Router } from "express";
 import auth from "../middlewares/auth.js";
-import { createTask, getTask, getCurrentUserTasks, payTask, deleteTask } from "../controllers/taskController.js";
+import { createTask, getTask, getCurrentUserTasks, payTask, deleteTask, retryTask } from "../controllers/taskController.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -334,5 +334,44 @@ router.get("/:taskId", auth, getTask);
  *         description: Task not found
  */
 router.post("/:taskId/pay", auth, payTask);
+
+/**
+ * @swagger
+ * /api/tasks/{taskId}/retry:
+ *   post:
+ *     summary: Retry processing a failed task
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the task to retry
+ *     responses:
+ *       200:
+ *         description: Task retry initiated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 task_id:
+ *                   type: string
+ *       400:
+ *         description: Task is not paid or not in failed status
+ *       403:
+ *         description: Permission denied
+ *       404:
+ *         description: Task not found
+ */
+router.post("/:taskId/retry", auth, retryTask);
 
 export default router;

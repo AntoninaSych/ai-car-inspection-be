@@ -96,20 +96,46 @@ export const processTask = async (taskId) => {
 
     console.log(`[Queue] Analyzing ${images.length} images for ${carInfo.brand} ${carInfo.model}`);
 
-    // Call Gemini API
-    const analysisResult = await analyzeCarImages(images, carInfo);
+    // Update status to "processing"
+    const processingStatus = await TaskStatus.findOne({ where: { name: "processing" } });
+    if (processingStatus) {
+        await task.update({ current_status_id: processingStatus.id });
+    }
 
-    // Create report
-    const report = await Report.create({
-        id: uuidv4(),
-        task_id: task.id,
-        data: analysisResult,
-    });
+    // Call Gemini API with error handling
+    let analysisResult;
+    try {
+        analysisResult = await analyzeCarImages(images, carInfo);
+    } catch (geminiError) {
+        console.error(`📋❌ Gemini API error for task ${taskId}:`, geminiError.message);
+        // Re-throw to trigger BullMQ retry mechanism
+        throw new Error(`Gemini analysis failed: ${geminiError.message}`);
+    }
 
-    // Update task status to "processed"
-    const processedStatus = await TaskStatus.findOne({ where: { name: "processed" } });
-    if (processedStatus) {
-        await task.update({ current_status_id: processedStatus.id });
+    // Validate analysis result
+    if (!analysisResult || !analysisResult.success) {
+        const errorMsg = analysisResult?.analysis?.error || "Invalid analysis result";
+        console.error(`📋❌ Invalid Gemini response for task ${taskId}:`, errorMsg);
+        throw new Error(`Invalid analysis result: ${errorMsg}`);
+    }
+
+    // Create report only if analysis was successful
+    let report;
+    try {
+        report = await Report.create({
+            id: uuidv4(),
+            task_id: task.id,
+            data: analysisResult,
+        });
+    } catch (dbError) {
+        console.error(`📋❌ Failed to create report for task ${taskId}:`, dbError.message);
+        throw new Error(`Failed to create report: ${dbError.message}`);
+    }
+
+    // Update task status to "completed" only after successful report creation
+    const completedStatus = await TaskStatus.findOne({ where: { name: "completed" } });
+    if (completedStatus) {
+        await task.update({ current_status_id: completedStatus.id });
     }
 
     console.log(`📋 Task ${taskId} processed successfully, report: ${report.id}`);
@@ -157,8 +183,25 @@ export const startWorker = () => {
         console.log(`📋 Job ${job.id} completed:`, result);
     });
 
-    worker.on("failed", (job, err) => {
+    worker.on("failed", async (job, err) => {
         console.error(`📋❌ Job ${job?.id} failed:`, err.message);
+
+        // Update task status to "failed" if this was the final attempt
+        if (job?.attemptsMade >= job?.opts?.attempts) {
+            const { taskId } = job.data;
+            try {
+                const failedStatus = await TaskStatus.findOne({ where: { name: "failed" } });
+                if (failedStatus) {
+                    await Task.update(
+                        { current_status_id: failedStatus.id },
+                        { where: { id: taskId } }
+                    );
+                    console.log(`📋 Task ${taskId} marked as failed`);
+                }
+            } catch (updateErr) {
+                console.error(`📋❌ Failed to update task status:`, updateErr.message);
+            }
+        }
     });
 
     worker.on("error", (err) => {

@@ -66,12 +66,12 @@ export const createTask = async (req, res, next) => {
             return next(HttpError(400, "At least one image is required"));
         }
 
-        const defaultStatus = await TaskStatus.findOne({
-            where: { name: "image_uploaded" }
+        const paymentStatus = await TaskStatus.findOne({
+            where: { name: "payment" }
         });
 
-        if (!defaultStatus) {
-            return next(HttpError(500, "Default task status not found"));
+        if (!paymentStatus) {
+            return next(HttpError(500, "Payment status not found"));
         }
 
         const task = await Task.create({
@@ -83,7 +83,7 @@ export const createTask = async (req, res, next) => {
             mileage: mileage ? Number(mileage) : null,
             country_code: country_code || null,
             owner_id: req.user.id,
-            current_status_id: defaultStatus.id,
+            current_status_id: paymentStatus.id,
             is_paid: false,
         });
 
@@ -244,7 +244,12 @@ export const payTask = async (req, res, next) => {
             return next(HttpError(403, "You don't have permission to pay for this task"));
         }
 
-        await task.update({ is_paid: true });
+        // Update status to "processing" and mark as paid
+        const processingStatus = await TaskStatus.findOne({ where: { name: "processing" } });
+        await task.update({
+            is_paid: true,
+            current_status_id: processingStatus?.id || task.current_status_id
+        });
 
         // Add task to processing queue
         try {
@@ -258,6 +263,57 @@ export const payTask = async (req, res, next) => {
         return res.status(200).json({
             ok: true,
             message: "Success",
+            task_id: task.id
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const retryTask = async (req, res, next) => {
+    try {
+        const { taskId } = req.params;
+
+        const task = await Task.findByPk(taskId, {
+            include: [{ model: TaskStatus }]
+        });
+
+        if (!task) {
+            return next(HttpError(404, "Task not found"));
+        }
+
+        if (task.owner_id !== req.user.id) {
+            return next(HttpError(403, "You don't have permission to retry this task"));
+        }
+
+        if (!task.is_paid) {
+            return next(HttpError(400, "Task is not paid yet"));
+        }
+
+        // Only allow retry for failed tasks
+        if (task.TaskStatus?.name !== "failed") {
+            return next(HttpError(400, `Cannot retry task with status: ${task.TaskStatus?.name || 'unknown'}`));
+        }
+
+        // Update status to "processing"
+        const processingStatus = await TaskStatus.findOne({ where: { name: "processing" } });
+        await task.update({
+            current_status_id: processingStatus?.id || task.current_status_id
+        });
+
+        // Add task to processing queue
+        try {
+            await addTaskToQueue(task.id);
+            console.log("Task added to processing queue for retry:", task.id);
+        } catch (queueError) {
+            console.error("Failed to add task to queue:", queueError.message);
+            return next(HttpError(500, "Failed to add task to queue"));
+        }
+
+        return res.status(200).json({
+            ok: true,
+            message: "Task retry initiated",
             task_id: task.id
         });
 
