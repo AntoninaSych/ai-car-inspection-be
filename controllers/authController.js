@@ -12,7 +12,11 @@ import axios from 'axios';
 const registerSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
+  password: Joi.string().min(8).required(),
+  agree: Joi.boolean().valid(true).required().messages({
+    'any.only': 'You must accept the terms and conditions',
+    'any.required': 'Agreement to terms is required',
+  }),
 });
 
 const loginSchema = Joi.object({
@@ -31,7 +35,7 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ message: error.message });
     }
 
-    const { name, email, password } = req.body;
+    const { name, email, password, agree } = req.body;
     const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
@@ -56,6 +60,7 @@ export const register = async (req, res, next) => {
       email,
       password: hashedPassword,
       avatarURL,
+      agreeToPolicies: agree,
     });
 
     const payload = { id: newUser.id };
