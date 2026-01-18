@@ -39,16 +39,15 @@ app.post(
 );
 app.use(express.json());
 app.use("/api/auth", authRoutes);
-app.use("/public", express.static(path.join(__dirname, "public")));
-app.use("/avatars", express.static(path.join(__dirname, "public/images/avatars")));
-app.use(express.static("public"));
-app.use(express.static("public/images/recipies"));
 app.use("/api/cars", carsRouter);
 app.use("/api/images", imagesRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/stripe", stripeRouter);
+app.use("/public", express.static(path.join(__dirname, "public")));
+app.use("/avatars", express.static(path.join(__dirname, "public/images/avatars")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const PORT = process.env.PORT || 5000;
 const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 
