@@ -101,8 +101,27 @@ export function getCountryInfo(countryCode) {
 }
 
 /**
+ * Get currency info from currency code
+ * @param {string} currencyCode - ISO 4217 currency code (e.g., "USD", "UAH")
+ * @returns {Object} Currency info with currencyCode and currency name
+ */
+function getCurrencyInfo(currencyCode) {
+  if (!currencyCode) return null;
+
+  const upperCode = currencyCode.toUpperCase();
+  // Find country that uses this currency to get the currency name
+  const countries = clm.getAllCountries();
+  const countryWithCurrency = countries.find(c => c.currency === upperCode);
+
+  return {
+    currencyCode: upperCode,
+    currency: countryWithCurrency?.currency_name || upperCode
+  };
+}
+
+/**
  * Build car inspection prompt with provided data
- * @param {Object} carInfo - Car information { brand, model, year, mileage, description, country_code }
+ * @param {Object} carInfo - Car information { brand, model, year, mileage, description, country_code, user_currency, user_language }
  * @param {string[]} imageDescriptions - Array of image descriptions
  * @returns {string} Formatted prompt
  */
@@ -113,8 +132,29 @@ export function buildCarInspectionPrompt(carInfo, imageDescriptions) {
 
   // Get country/region info for currency, locale and market context
   const countryInfo = getCountryInfo(carInfo.country_code);
+
+  // Override with user preferences if provided
+  let finalCurrencyCode = countryInfo.currencyCode;
+  let finalCurrency = countryInfo.currency;
+  let finalLanguage = countryInfo.language;
+
+  // Apply user's currency preference if set
+  if (carInfo.user_currency) {
+    const userCurrencyInfo = getCurrencyInfo(carInfo.user_currency);
+    if (userCurrencyInfo) {
+      finalCurrencyCode = userCurrencyInfo.currencyCode;
+      finalCurrency = userCurrencyInfo.currency;
+    }
+  }
+
+  // Apply user's language preference if set
+  if (carInfo.user_language) {
+    const langCode = carInfo.user_language.toLowerCase();
+    finalLanguage = LANGUAGE_NAMES[langCode] || langCode;
+  }
+
   const regionContext = carInfo.country_code
-    ? `This vehicle is located in ${countryInfo.region}. Provide all cost estimates in ${countryInfo.currency} (${countryInfo.currencyCode}) based on ${countryInfo.region} market prices. Write all text content in ${countryInfo.language}.`
+    ? `This vehicle is located in ${countryInfo.region}. Provide all cost estimates in ${finalCurrency} (${finalCurrencyCode}) based on ${countryInfo.region} market prices. Write all text content in ${finalLanguage}.`
     : '';
 
   return CAR_INSPECTION_PROMPT
@@ -125,9 +165,9 @@ export function buildCarInspectionPrompt(carInfo, imageDescriptions) {
     .replace('{{imageDescriptions}}', imageDescriptions.join(", "))
     .replace('{{ownerDescription}}', ownerDescription)
     .replace('{{regionContext}}', regionContext)
-    .replace(/\{\{currency\}\}/g, countryInfo.currency)
-    .replace(/\{\{currencyCode\}\}/g, countryInfo.currencyCode)
+    .replace(/\{\{currency\}\}/g, finalCurrency)
+    .replace(/\{\{currencyCode\}\}/g, finalCurrencyCode)
     .replace(/\{\{region\}\}/g, countryInfo.region)
     .replace(/\{\{locale\}\}/g, countryInfo.locale)
-    .replace(/\{\{language\}\}/g, countryInfo.language);
+    .replace(/\{\{language\}\}/g, finalLanguage);
 }

@@ -75,7 +75,7 @@ export const changeAvatar = async (req, res, next) => {
 
 
 export const getCurrent = async (req, res) => {
-  const { id, name, email, avatarURL } = req.user;
+  const { id, name, email, avatarURL, language, currency } = req.user;
 
 
   const fullAvatarUrl = avatarURL
@@ -83,5 +83,59 @@ export const getCurrent = async (req, res) => {
       : `${process.env.APP_URL}${defaultAvatar}`;
 
 
-  res.status(200).json({ id, name, email, avatarURL: fullAvatarUrl });
+  res.status(200).json({ id, name, email, avatarURL: fullAvatarUrl, language, currency });
+};
+
+
+export const updateLanguage = async (req, res, next) => {
+  try {
+    const { language } = req.body;
+
+    if (!language || typeof language !== 'string') {
+      return next(HttpError(400, "Language code is required"));
+    }
+
+    const languageCode = language.toLowerCase().trim();
+    if (languageCode.length < 2 || languageCode.length > 5) {
+      return next(HttpError(400, "Invalid language code"));
+    }
+
+    req.user.language = languageCode;
+    await req.user.save();
+
+    res.status(200).json({
+      ok: true,
+      message: "Language updated successfully",
+      language: req.user.language,
+    });
+  } catch (err) {
+    next(err.status ? err : HttpError(500, err.message));
+  }
+};
+
+
+export const updateCurrency = async (req, res, next) => {
+  try {
+    const { currency } = req.body;
+
+    if (!currency || typeof currency !== 'string') {
+      return next(HttpError(400, "Currency code is required"));
+    }
+
+    const currencyCode = currency.toUpperCase().trim();
+    if (currencyCode.length !== 3) {
+      return next(HttpError(400, "Currency code must be 3 characters (ISO 4217)"));
+    }
+
+    req.user.currency = currencyCode;
+    await req.user.save();
+
+    res.status(200).json({
+      ok: true,
+      message: "Currency updated successfully",
+      currency: req.user.currency,
+    });
+  } catch (err) {
+    next(err.status ? err : HttpError(500, err.message));
+  }
 };

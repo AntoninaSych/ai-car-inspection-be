@@ -81,7 +81,7 @@ export const processTask = async (taskId) => {
         throw new Error(`No images found for task: ${taskId}`);
     }
 
-    // Build car info
+    // Build car info with user preferences for currency and language
     const carInfo = {
         brand: task.CarBrand?.name || "Unknown",
         model: task.CarModel?.name || "Unknown",
@@ -89,6 +89,9 @@ export const processTask = async (taskId) => {
         mileage: task.mileage,
         description: task.description,
         country_code: task.country_code,
+        // User preferences for currency and language (override defaults)
+        user_currency: task.owner?.currency || null,
+        user_language: task.owner?.language || null,
     };
 
     console.log(`[Queue] Analyzing ${images.length} images for ${carInfo.brand} ${carInfo.model}`);

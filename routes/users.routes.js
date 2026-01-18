@@ -4,7 +4,9 @@ import {
   getAllUsers,
   getUserInfo,
   getCurrent,
-  changeAvatar
+  changeAvatar,
+  updateLanguage,
+  updateCurrency
 } from "../controllers/users.controller.js";
 import upload from "../middlewares/upload.js";
 import { login, logout, register } from "../controllers/authController.js";
@@ -74,6 +76,10 @@ router.get("/", auth, getAllUsers);
  *                   type: string
  *                 avatarURL:
  *                   type: string
+ *                 language:
+ *                   type: string
+ *                 currency:
+ *                   type: string
  *       401:
  *         description: Unauthorized
  */
@@ -115,6 +121,90 @@ router.get("/current", auth, getCurrent);
  *         description: Unauthorized
  */
 router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
+
+/**
+ * @swagger
+ * /api/users/language:
+ *   patch:
+ *     summary: Update user language preference
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - language
+ *             properties:
+ *               language:
+ *                 type: string
+ *                 example: en
+ *                 description: Language code (ISO 639-1, e.g., en, uk, pl, de)
+ *     responses:
+ *       200:
+ *         description: Language updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 language:
+ *                   type: string
+ *       400:
+ *         description: Invalid language code
+ *       401:
+ *         description: Unauthorized
+ */
+router.patch("/language", auth, updateLanguage);
+
+/**
+ * @swagger
+ * /api/users/currency:
+ *   patch:
+ *     summary: Update user currency preference
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currency
+ *             properties:
+ *               currency:
+ *                 type: string
+ *                 example: USD
+ *                 description: Currency code (ISO 4217, e.g., USD, EUR, UAH)
+ *     responses:
+ *       200:
+ *         description: Currency updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 currency:
+ *                   type: string
+ *       400:
+ *         description: Invalid currency code
+ *       401:
+ *         description: Unauthorized
+ */
+router.patch("/currency", auth, updateCurrency);
 
 /**
  * @swagger
