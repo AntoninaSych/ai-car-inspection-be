@@ -46,6 +46,11 @@ const User = sequelize.define('User', {
         allowNull: true,
         defaultValue: 'usd',
     },
+    agreeToPolicies: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    },
 }, {
     timestamps: true,
     tableName: 'users',

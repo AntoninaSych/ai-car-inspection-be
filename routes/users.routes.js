@@ -265,6 +265,7 @@ router.get("/:id", auth, getUserInfo);
  *               - name
  *               - email
  *               - password
+ *               - agreeToPolicies
  *             properties:
  *               name:
  *                 type: string
@@ -275,7 +276,12 @@ router.get("/:id", auth, getUserInfo);
  *               password:
  *                 type: string
  *                 format: password
+ *                 minLength: 8
  *                 example: password123
+ *               agreeToPolicies:
+ *                 type: boolean
+ *                 description: User must accept the terms and privacy policy
+ *                 example: true
  *     responses:
  *       201:
  *         description: User created successfully
