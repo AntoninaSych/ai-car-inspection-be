@@ -4,6 +4,7 @@ import {
     validateResetPasswordToken,
     resetPassword,
 } from "../controllers/passwordController.js";
+import { forgotPasswordLimiter } from "../middlewares/rateLimiter.js";
 
 const router = Router();
 
@@ -47,8 +48,10 @@ const router = Router();
  *                   example: Reset link sent
  *       400:
  *         description: Validation error
+ *       429:
+ *         description: Too many requests (max 3 per day)
  */
-router.post("/forgot-password", (req, res, next) => {
+router.post("/forgot-password", forgotPasswordLimiter, (req, res, next) => {
     forgotPassword(req, res, next).catch(next);
 });
 
