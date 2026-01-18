@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { Task } from "../models/index.js";
+import { Task, TaskStatus } from "../models/index.js";
 import { addTaskToQueue } from "../services/taskQueueService.js";
 
 const getStripeClient = () => {
@@ -44,7 +44,12 @@ export const stripeWebhookHandler = async (req, res) => {
 
             if (task) {
               if (!task.is_paid) {
-                await task.update({ is_paid: true });
+                // Update status to "processing" and mark as paid
+                const processingStatus = await TaskStatus.findOne({ where: { name: "processing" } });
+                await task.update({
+                  is_paid: true,
+                  current_status_id: processingStatus?.id || task.current_status_id
+                });
                 console.log("Task marked as paid:", task.id);
 
                 // Add task to processing queue

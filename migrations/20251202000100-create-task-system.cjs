@@ -65,11 +65,11 @@ module.exports = {
         });
 
         await queryInterface.bulkInsert("task_statuses", [
-            { id: uuidv4(), name: "image_uploaded", created_at: new Date(), updated_at: new Date() },
-            { id: uuidv4(), name: "email_sent", created_at: new Date(), updated_at: new Date() },
-            { id: uuidv4(), name: "report_generated", created_at: new Date(), updated_at: new Date() },
+            { id: uuidv4(), name: "payment", created_at: new Date(), updated_at: new Date() },
+            { id: uuidv4(), name: "processing", created_at: new Date(), updated_at: new Date() },
+            { id: uuidv4(), name: "failed", created_at: new Date(), updated_at: new Date() },
+            { id: uuidv4(), name: "completed", created_at: new Date(), updated_at: new Date() },
         ]);
-
 
         //
         // TASKS
