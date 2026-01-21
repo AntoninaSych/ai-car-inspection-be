@@ -15,7 +15,7 @@ import imagesRouter from "./routes/images.routes.js";
 import tasksRouter from "./routes/tasks.routes.js";
 import reportsRouter from "./routes/reports.routes.js";
 import stripeRouter from "./routes/stripe.routes.js";
-import { taskQueue } from "./services/taskQueueService.js";
+import { taskQueue, maintenanceQueue } from "./services/taskQueueService.js";
 
 import { stripeWebhookHandler } from "./controllers/stripeWebhookController.js";
 import HttpError from "./helpers/HttpError.js";
@@ -82,10 +82,37 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 const serverAdapter = new ExpressAdapter();
 serverAdapter.setBasePath("/admin/queues");
 createBullBoard({
-  queues: [new BullMQAdapter(taskQueue)],
+  queues: [
+    new BullMQAdapter(taskQueue),
+    new BullMQAdapter(maintenanceQueue),
+  ],
   serverAdapter,
 });
-app.use("/admin/queues", serverAdapter.getRouter());
+
+// Basic Auth middleware for admin routes
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
+
+const adminAuth = (req, res, next) => {
+  const auth = req.headers.authorization;
+
+  if (!auth || !auth.startsWith("Basic ")) {
+    res.set("WWW-Authenticate", 'Basic realm="Admin Area"');
+    return res.status(401).send("Authentication required");
+  }
+
+  const credentials = Buffer.from(auth.slice(6), "base64").toString();
+  const [user, password] = credentials.split(":");
+
+  if (user === ADMIN_USER && password === ADMIN_PASSWORD) {
+    return next();
+  }
+
+  res.set("WWW-Authenticate", 'Basic realm="Admin Area"');
+  return res.status(401).send("Invalid credentials");
+};
+
+app.use("/admin/queues", adminAuth, serverAdapter.getRouter());
 
 app.use((req, res, next) => next(HttpError(404, "Not found")));
 
