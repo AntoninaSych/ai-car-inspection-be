@@ -1,6 +1,7 @@
 import rateLimit from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
 import { createClient } from "redis";
+import ErrorCodes from "../helpers/errorCodes.js";
 
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379", 10);
@@ -55,7 +56,7 @@ export const forgotPasswordLimiter = createRateLimiter({
     prefix: "rl:forgot-password:",
     windowMs: 24 * 60 * 60 * 1000, // 24 hours
     max: 3,
-    message: { message: "Too many password reset requests. Please try again tomorrow." },
+    message: { message: "Too many password reset requests. Please try again tomorrow.", internalCode: ErrorCodes.RATE_LIMIT_PASSWORD_RESET },
     keyGenerator: (req) => {
         const email = req.body?.email?.toLowerCase()?.trim();
         return email || "unknown";
@@ -70,7 +71,7 @@ export const retryTaskLimiter = createRateLimiter({
     prefix: "rl:retry-task:",
     windowMs: 24 * 60 * 60 * 1000, // 24 hours
     max: 3,
-    message: { message: "Too many retry requests for this task. Please try again tomorrow." },
+    message: { message: "Too many retry requests for this task. Please try again tomorrow.", internalCode: ErrorCodes.RATE_LIMIT_TASK_RETRY },
     keyGenerator: (req) => {
         // Use task ID from URL params
         return req.params?.taskId || "unknown";
@@ -85,7 +86,7 @@ export const resendVerificationLimiter = createRateLimiter({
     prefix: "rl:resend-verification:",
     windowMs: 24 * 60 * 60 * 1000, // 24 hours
     max: 3,
-    message: { message: "Too many verification requests. Please try again tomorrow." },
+    message: { message: "Too many verification requests. Please try again tomorrow.", internalCode: ErrorCodes.RATE_LIMIT_EMAIL_VERIFICATION },
     keyGenerator: (req) => {
         const email = req.body?.email?.toLowerCase()?.trim();
         return email || "unknown";

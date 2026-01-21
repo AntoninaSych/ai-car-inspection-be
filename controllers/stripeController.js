@@ -1,10 +1,11 @@
 import Stripe from "stripe";
 import HttpError from "../helpers/HttpError.js";
+import ErrorCodes from "../helpers/errorCodes.js";
 import { Task } from "../models/index.js";
 
 const getStripeClient = () => {
     const key = process.env.STRIPE_SECRET_KEY;
-    if (!key) throw HttpError(500, "STRIPE_SECRET_KEY is not configured");
+    if (!key) throw HttpError(500, "STRIPE_SECRET_KEY is not configured", ErrorCodes.PAYMENT_STRIPE_NOT_CONFIGURED);
     return new Stripe(key);
 };
 
@@ -18,24 +19,24 @@ export const createCheckoutSession = async (req, res, next) => {
     const { task_id, amount, currency } = req.body || {};
 
     if (typeof task_id !== "string" || !task_id.trim()) {
-        return next(HttpError(400, "task_id is required"));
+        return next(HttpError(400, "task_id is required", ErrorCodes.VALIDATION_REQUIRED_FIELD));
     }
 
     const parsedAmount = Number(amount);
     if (!Number.isInteger(parsedAmount) || parsedAmount < 50) {
-        return next(HttpError(400, "amount must be an integer in minor units and >= 50"));
+        return next(HttpError(400, "amount must be an integer in minor units and >= 50", ErrorCodes.VALIDATION_INVALID_AMOUNT));
     }
 
     const task = await Task.findByPk(task_id);
 
     if (!task) {
-        return next(HttpError(404, "Task not found"));
+        return next(HttpError(404, "Task not found", ErrorCodes.RESOURCE_TASK_NOT_FOUND));
     }
 
     // If you protect the route with auth middleware, req.user should exist
     // For demo/testing without auth we don't block here, but if user exists we can enforce ownership
     if (req.user?.id && task.owner_id && task.owner_id !== req.user.id) {
-        return next(HttpError(403, "You don't have permission to pay for this task"));
+        return next(HttpError(403, "You don't have permission to pay for this task", ErrorCodes.RESOURCE_ACCESS_DENIED));
     }
 
     if (task.is_paid) {
@@ -95,13 +96,13 @@ export const getCheckoutSession = async (req, res, next) => {
     const { sessionId } = req.params;
 
     if (!sessionId || typeof sessionId !== "string") {
-        return next(HttpError(400, "sessionId is required"));
+        return next(HttpError(400, "sessionId is required", ErrorCodes.VALIDATION_REQUIRED_FIELD));
     }
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (!session) {
-        return next(HttpError(404, "Session not found"));
+        return next(HttpError(404, "Session not found", ErrorCodes.RESOURCE_SESSION_NOT_FOUND));
     }
 
     return res.status(200).json({
@@ -124,33 +125,33 @@ export const confirmCheckoutSession = async (req, res, next) => {
     const { session_id } = req.body || {};
 
     if (typeof session_id !== "string" || !session_id.trim()) {
-        return next(HttpError(400, "session_id is required"));
+        return next(HttpError(400, "session_id is required", ErrorCodes.VALIDATION_REQUIRED_FIELD));
     }
 
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
     if (!session) {
-        return next(HttpError(404, "Session not found"));
+        return next(HttpError(404, "Session not found", ErrorCodes.RESOURCE_SESSION_NOT_FOUND));
     }
 
     if (session.status !== "complete" || session.payment_status !== "paid") {
-        return next(HttpError(409, "Payment is not completed"));
+        return next(HttpError(409, "Payment is not completed", ErrorCodes.VALIDATION_FAILED));
     }
 
     const taskId = session?.metadata?.task_id || session?.client_reference_id;
 
     if (!taskId) {
-        return next(HttpError(400, "task_id is missing in session metadata"));
+        return next(HttpError(400, "task_id is missing in session metadata", ErrorCodes.VALIDATION_REQUIRED_FIELD));
     }
 
     const task = await Task.findByPk(taskId);
 
     if (!task) {
-        return next(HttpError(404, "Task not found"));
+        return next(HttpError(404, "Task not found", ErrorCodes.RESOURCE_TASK_NOT_FOUND));
     }
 
     if (req.user?.id && task.owner_id && task.owner_id !== req.user.id) {
-        return next(HttpError(403, "You don't have permission to update this task"));
+        return next(HttpError(403, "You don't have permission to update this task", ErrorCodes.RESOURCE_ACCESS_DENIED));
     }
 
     if (!task.is_paid) {

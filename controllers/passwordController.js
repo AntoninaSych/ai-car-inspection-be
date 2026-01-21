@@ -6,6 +6,7 @@ import {
     validateToken,
     TOKEN_TYPES,
 } from "../services/tokenService.js";
+import ErrorCodes from "../helpers/errorCodes.js";
 
 export const forgotPassword = async (req, res, next) => {
     try {
@@ -55,13 +56,13 @@ export const resetPassword = async (req, res, next) => {
         const result = await validateToken(token, TOKEN_TYPES.PASSWORD_RESET, true);
 
         if (!result.valid) {
-            return res.status(400).json({ message: "Invalid or expired token" });
+            return res.status(400).json({ message: "Invalid or expired token", internalCode: ErrorCodes.AUTH_TOKEN_INVALID });
         }
 
         const user = await User.findByPk(result.userId);
 
         if (!user) {
-            return res.status(400).json({ message: "User not found" });
+            return res.status(400).json({ message: "User not found", internalCode: ErrorCodes.RESOURCE_USER_NOT_FOUND });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);

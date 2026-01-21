@@ -55,10 +55,22 @@ const router = Router();
  *                   example: "https://checkout.stripe.com/c/pay/cs_test_123"
  *       400:
  *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
  *       404:
  *         description: Task not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Server/Stripe error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/checkout-session", (req, res, next) => {
     createCheckoutSession(req, res, next).catch(next);
@@ -108,8 +120,16 @@ router.post("/checkout-session", (req, res, next) => {
  *                       additionalProperties: true
  *       404:
  *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Server/Stripe error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/checkout-session/:sessionId", (req, res, next) => {
     getCheckoutSession(req, res, next).catch(next);

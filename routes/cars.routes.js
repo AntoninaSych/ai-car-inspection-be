@@ -48,6 +48,10 @@ const router = Router();
  *                         type: boolean
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/brands", (req, res, next) => {
     getBrands(req, res).catch(next);
@@ -95,8 +99,16 @@ router.get("/brands", (req, res, next) => {
  *                         type: string
  *       404:
  *         description: Brand not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/brands/:brandId/models", (req, res, next) => {
     getModelsByBrand(req, res).catch(next);

@@ -48,6 +48,10 @@ const router = Router();
  *                     type: string
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 router.get("/", auth, getAllUsers);
@@ -82,6 +86,10 @@ router.get("/", auth, getAllUsers);
  *                   type: string
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/current", auth, getCurrent);
 
@@ -117,8 +125,16 @@ router.get("/current", auth, getCurrent);
  *                   type: string
  *       400:
  *         description: File upload error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
 
@@ -159,8 +175,16 @@ router.patch("/avatars", auth, upload.single("avatar"), changeAvatar);
  *                   type: string
  *       400:
  *         description: Invalid language code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch("/language", auth, updateLanguage);
 
@@ -201,8 +225,16 @@ router.patch("/language", auth, updateLanguage);
  *                   type: string
  *       400:
  *         description: Invalid currency code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch("/currency", auth, updateCurrency);
 
@@ -243,8 +275,16 @@ router.patch("/currency", auth, updateCurrency);
  *                       type: string
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 router.get("/:id", auth, getUserInfo);
@@ -287,8 +327,16 @@ router.get("/:id", auth, getUserInfo);
  *         description: User created successfully
  *       400:
  *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
  *       409:
  *         description: Email already in use
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 router.post("/register", register);
@@ -321,8 +369,16 @@ router.post("/register", register);
  *         description: Successful login
  *       400:
  *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 router.post("/login", login);
@@ -340,6 +396,10 @@ router.post("/login", login);
  *         description: Successfully logged out
  *       401:
  *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/logout", auth, logout);
 

@@ -19,6 +19,7 @@ import { taskQueue, maintenanceQueue } from "./services/taskQueueService.js";
 
 import { stripeWebhookHandler } from "./controllers/stripeWebhookController.js";
 import HttpError from "./helpers/HttpError.js";
+import ErrorCodes from "./helpers/errorCodes.js";
 import authRoutes from "./routes/auth.routes.js";
 
 dotenv.config();
@@ -69,6 +70,58 @@ const swaggerOptions = {
           description: "Enter your JWT token",
         },
       },
+      schemas: {
+        ErrorResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "Human-readable error message",
+              example: "Not authorized",
+            },
+            internalCode: {
+              type: "string",
+              description: "Internal error code for frontend translation",
+              example: "AUTH_NOT_AUTHORIZED",
+            },
+          },
+          required: ["message", "internalCode"],
+        },
+        ValidationError: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "Validation error message",
+              example: "\"email\" is required",
+            },
+            internalCode: {
+              type: "string",
+              description: "Internal error code",
+              example: "VALIDATION_FAILED",
+              enum: ["VALIDATION_FAILED", "VALIDATION_REQUIRED_FIELD", "VALIDATION_INVALID_INPUT"],
+            },
+          },
+          required: ["message", "internalCode"],
+        },
+        RateLimitError: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "Rate limit error message",
+              example: "Too many requests. Please try again tomorrow.",
+            },
+            internalCode: {
+              type: "string",
+              description: "Rate limit error code",
+              example: "RATE_LIMIT_EXCEEDED",
+              enum: ["RATE_LIMIT_EXCEEDED", "RATE_LIMIT_PASSWORD_RESET", "RATE_LIMIT_TASK_RETRY", "RATE_LIMIT_EMAIL_VERIFICATION"],
+            },
+          },
+          required: ["message", "internalCode"],
+        },
+      },
     },
     security: [{ bearerAuth: [] }],
   },
@@ -114,11 +167,11 @@ const adminAuth = (req, res, next) => {
 
 app.use("/admin/queues", adminAuth, serverAdapter.getRouter());
 
-app.use((req, res, next) => next(HttpError(404, "Not found")));
+app.use((req, res, next) => next(HttpError(404, "Not found", ErrorCodes.RESOURCE_NOT_FOUND)));
 
 app.use((err, req, res, next) => {
-  const { status = 500, message = "Server error" } = err;
-  res.status(status).json({ message });
+  const { status = 500, message = "Server error", internalCode = ErrorCodes.SERVER_ERROR } = err;
+  res.status(status).json({ message, internalCode });
 });
 
 export default app;

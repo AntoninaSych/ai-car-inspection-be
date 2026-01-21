@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import axios from 'axios';
 import { createEmailVerifyToken } from "../services/tokenService.js";
 import { sendVerificationEmail } from "../services/emailService.js";
+import ErrorCodes from "../helpers/errorCodes.js";
 
 const registerSchema = Joi.object({
   name: Joi.string().required(),
@@ -35,14 +36,14 @@ export const register = async (req, res, next) => {
   try {
     const { error } = registerSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ message: error.message });
+      return res.status(400).json({ message: error.message, internalCode: ErrorCodes.VALIDATION_FAILED });
     }
 
     const { name, email, password, agree } = req.body;
     const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
-      return res.status(409).json({ message: "Email in use" });
+      return res.status(409).json({ message: "Email in use", internalCode: ErrorCodes.AUTH_EMAIL_IN_USE });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -101,14 +102,14 @@ export const login = async (req, res, next) => {
   try {
     const { error } = loginSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ message: error.message });
+      return res.status(400).json({ message: error.message, internalCode: ErrorCodes.VALIDATION_FAILED });
     }
 
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ message: "Email or password is wrong" });
+      return res.status(401).json({ message: "Email or password is wrong", internalCode: ErrorCodes.AUTH_EMAIL_OR_PASSWORD_WRONG });
     }
 
     const payload = { id: user.id };

@@ -1,6 +1,7 @@
 import { Task, Image, CarBrand, CarModel, TaskStatus, ImageType, Report } from "../models/index.js";
 import { addTaskToQueue } from "../services/taskQueueService.js";
 import HttpError from "../helpers/HttpError.js";
+import ErrorCodes from "../helpers/errorCodes.js";
 import { v4 as uuidv4 } from "uuid";
 
 const formatTask = (task) => ({
@@ -36,17 +37,17 @@ export const createTask = async (req, res, next) => {
         const brand = await CarBrand.findByPk(brand_id);
         const model = await CarModel.findByPk(model_id);
 
-        if (!brand) return next(HttpError(404, "Brand not found"));
-        if (!model) return next(HttpError(404, "Model not found"));
+        if (!brand) return next(HttpError(404, "Brand not found", ErrorCodes.RESOURCE_BRAND_NOT_FOUND));
+        if (!model) return next(HttpError(404, "Model not found", ErrorCodes.RESOURCE_MODEL_NOT_FOUND));
 
         const parsedYear = year ? parseInt(year, 10) : null;
 
         if (parsedYear) {
             if (model.year_from && parsedYear < model.year_from) {
-                return next(HttpError(400, `Year must be >= ${model.year_from}`));
+                return next(HttpError(400, `Year must be >= ${model.year_from}`, ErrorCodes.VALIDATION_YEAR_OUT_OF_RANGE));
             }
             if (model.year_to && parsedYear > model.year_to) {
-                return next(HttpError(400, `Year must be <= ${model.year_to}`));
+                return next(HttpError(400, `Year must be <= ${model.year_to}`, ErrorCodes.VALIDATION_YEAR_OUT_OF_RANGE));
             }
         }
 
@@ -63,7 +64,7 @@ export const createTask = async (req, res, next) => {
         );
 
         if (uploadedKeys.length === 0) {
-            return next(HttpError(400, "At least one image is required"));
+            return next(HttpError(400, "At least one image is required", ErrorCodes.TASK_IMAGES_REQUIRED));
         }
 
         const paymentStatus = await TaskStatus.findOne({
@@ -71,7 +72,7 @@ export const createTask = async (req, res, next) => {
         });
 
         if (!paymentStatus) {
-            return next(HttpError(500, "Payment status not found"));
+            return next(HttpError(500, "Payment status not found", ErrorCodes.SERVER_ERROR));
         }
 
         const task = await Task.create({
@@ -126,11 +127,11 @@ export const deleteTask = async (req, res, next) => {
         });
 
         if (!task) {
-            return next(HttpError(404, "Task not found"));
+            return next(HttpError(404, "Task not found", ErrorCodes.RESOURCE_TASK_NOT_FOUND));
         }
 
         if (task.owner_id !== req.user.id) {
-            return next(HttpError(403, "You don't have permission to delete this task"));
+            return next(HttpError(403, "You don't have permission to delete this task", ErrorCodes.RESOURCE_ACCESS_DENIED));
         }
 
         const filePaths = (task.Images || [])
@@ -185,12 +186,12 @@ export const getTask = async (req, res, next) => {
         });
 
         if (!task) {
-            return next(HttpError(404, "Task not found"));
+            return next(HttpError(404, "Task not found", ErrorCodes.RESOURCE_TASK_NOT_FOUND));
         }
 
         // Check if user owns this task
         if (task.owner_id !== req.user.id) {
-            return next(HttpError(403, "You don't have permission to view this task"));
+            return next(HttpError(403, "You don't have permission to view this task", ErrorCodes.RESOURCE_ACCESS_DENIED));
         }
 
         return res.status(200).json({
@@ -237,11 +238,11 @@ export const payTask = async (req, res, next) => {
         const task = await Task.findByPk(taskId);
 
         if (!task) {
-            return next(HttpError(404, "Task not found"));
+            return next(HttpError(404, "Task not found", ErrorCodes.RESOURCE_TASK_NOT_FOUND));
         }
 
         if (task.owner_id !== req.user.id) {
-            return next(HttpError(403, "You don't have permission to pay for this task"));
+            return next(HttpError(403, "You don't have permission to pay for this task", ErrorCodes.RESOURCE_ACCESS_DENIED));
         }
 
         // Update status to "processing" and mark as paid
@@ -280,20 +281,20 @@ export const retryTask = async (req, res, next) => {
         });
 
         if (!task) {
-            return next(HttpError(404, "Task not found"));
+            return next(HttpError(404, "Task not found", ErrorCodes.RESOURCE_TASK_NOT_FOUND));
         }
 
         if (task.owner_id !== req.user.id) {
-            return next(HttpError(403, "You don't have permission to retry this task"));
+            return next(HttpError(403, "You don't have permission to retry this task", ErrorCodes.RESOURCE_ACCESS_DENIED));
         }
 
         if (!task.is_paid) {
-            return next(HttpError(400, "Task is not paid yet"));
+            return next(HttpError(400, "Task is not paid yet", ErrorCodes.TASK_NOT_PAID));
         }
 
         // Only allow retry for failed tasks
         if (task.TaskStatus?.name !== "failed") {
-            return next(HttpError(400, `Cannot retry task with status: ${task.TaskStatus?.name || 'unknown'}`));
+            return next(HttpError(400, `Cannot retry task with status: ${task.TaskStatus?.name || 'unknown'}`, ErrorCodes.VALIDATION_FAILED));
         }
 
         // Update status to "processing"
@@ -308,7 +309,7 @@ export const retryTask = async (req, res, next) => {
             console.log("Task added to processing queue for retry:", task.id);
         } catch (queueError) {
             console.error("Failed to add task to queue:", queueError.message);
-            return next(HttpError(500, "Failed to add task to queue"));
+            return next(HttpError(500, "Failed to add task to queue", ErrorCodes.TASK_PROCESSING_FAILED));
         }
 
         return res.status(200).json({
