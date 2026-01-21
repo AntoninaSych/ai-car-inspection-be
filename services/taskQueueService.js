@@ -2,7 +2,7 @@ import { Queue, Worker } from "bullmq";
 import { Task, Image, ImageType, CarBrand, CarModel, Report, TaskStatus, User } from "../models/index.js";
 import { analyzeCarImages } from "./geminiService.js";
 import { sendReportReadyEmail } from "./emailService.js";
-import { createDirectAccessToken } from "./tokenService.js";
+import { createDirectAccessToken, cleanupExpiredTokens } from "./tokenService.js";
 import { v4 as uuidv4 } from "uuid";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -26,6 +26,15 @@ export const taskQueue = new Queue("task-processing", {
         },
         removeOnComplete: 100,
         removeOnFail: 50,
+    },
+});
+
+// Create the maintenance queue for scheduled cleanup tasks
+export const maintenanceQueue = new Queue("maintenance", {
+    connection,
+    defaultJobOptions: {
+        removeOnComplete: 10,
+        removeOnFail: 10,
     },
 });
 
@@ -229,5 +238,61 @@ export const stopWorker = async () => {
         await worker.close();
         worker = null;
         console.log("📋 Worker stopped");
+    }
+};
+
+// Maintenance worker
+let maintenanceWorker = null;
+
+export const startMaintenanceWorker = async () => {
+    if (maintenanceWorker) {
+        console.log("🧹 Maintenance worker already running");
+        return maintenanceWorker;
+    }
+
+    // Schedule cleanup job to run daily at 3 AM
+    await maintenanceQueue.add(
+        "cleanup-tokens",
+        {},
+        {
+            repeat: { pattern: "0 3 * * *" }, // Cron: 3:00 AM every day
+            jobId: "cleanup-tokens-daily",    // Prevent duplicates
+        }
+    );
+    console.log("🧹 Scheduled daily token cleanup at 3:00 AM");
+
+    maintenanceWorker = new Worker(
+        "maintenance",
+        async (job) => {
+            if (job.name === "cleanup-tokens") {
+                const deleted = await cleanupExpiredTokens();
+                console.log(`🧹 Cleaned up ${deleted} expired tokens`);
+                return { deleted };
+            }
+        },
+        { connection }
+    );
+
+    maintenanceWorker.on("completed", (job, result) => {
+        console.log(`🧹 Maintenance job ${job.name} completed:`, result);
+    });
+
+    maintenanceWorker.on("failed", (job, err) => {
+        console.error(`🧹❌ Maintenance job ${job?.name} failed:`, err.message);
+    });
+
+    maintenanceWorker.on("error", (err) => {
+        console.error("🧹❌ Maintenance worker error:", err);
+    });
+
+    console.log("🧹 Maintenance worker started");
+    return maintenanceWorker;
+};
+
+export const stopMaintenanceWorker = async () => {
+    if (maintenanceWorker) {
+        await maintenanceWorker.close();
+        maintenanceWorker = null;
+        console.log("🧹 Maintenance worker stopped");
     }
 };

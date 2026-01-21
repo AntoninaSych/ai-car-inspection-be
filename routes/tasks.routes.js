@@ -93,41 +93,52 @@ const router = Router();
  *         description: Validation error
  *         content:
  *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
  *             examples:
  *               missing_images:
  *                 summary: No images provided
  *                 value:
  *                   message: "At least one image is required"
+ *                   internalCode: "TASK_IMAGES_REQUIRED"
  *               invalid_year_low:
  *                 summary: Year is lower than allowed by model
  *                 value:
  *                   message: "Year must be >= 2010"
+ *                   internalCode: "VALIDATION_YEAR_OUT_OF_RANGE"
  *               invalid_year_high:
  *                 summary: Year is higher than allowed by model
  *                 value:
- *                   message:
- *                     "Year must be <= 2023"
+ *                   message: "Year must be <= 2023"
+ *                   internalCode: "VALIDATION_YEAR_OUT_OF_RANGE"
  *
  *       404:
  *         description: Brand or model not found
  *         content:
  *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *             examples:
  *               brand_not_found:
  *                 summary: Brand does not exist
  *                 value:
  *                   message: "Brand not found"
+ *                   internalCode: "RESOURCE_BRAND_NOT_FOUND"
  *               model_not_found:
  *                 summary: Model does not exist
  *                 value:
  *                   message: "Model not found"
+ *                   internalCode: "RESOURCE_MODEL_NOT_FOUND"
  *
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *             example:
  *               message: "Default task status not found"
+ *               internalCode: "SERVER_ERROR"
  */
 router.post(
     "/",
@@ -168,10 +179,22 @@ router.post(
  *               task_id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
  *       403:
  *         description: Permission denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Task not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete("/:taskId", auth, deleteTask);
 
@@ -233,6 +256,10 @@ router.delete("/:taskId", auth, deleteTask);
  *                   updated_at: "2024-01-15T10:30:00Z"
  *       403:
  *         description: Permission denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/current", auth, getCurrentUserTasks);
 
@@ -300,8 +327,16 @@ router.get("/current", auth, getCurrentUserTasks);
  *                 updated_at: "2024-01-15T10:30:00Z"
  *       403:
  *         description: Permission denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Task not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/:taskId", auth, getTask);
 
@@ -331,8 +366,16 @@ router.get("/:taskId", auth, getTask);
  *               task_id: "56fa1bc4-084b-4d9b-94b6-08ab97216d37"
  *       403:
  *         description: Permission denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Task not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/:taskId/pay", auth, payTask);
 
@@ -368,12 +411,28 @@ router.post("/:taskId/pay", auth, payTask);
  *                   type: string
  *       400:
  *         description: Task is not paid or not in failed status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Permission denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Task not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       429:
  *         description: Too many requests (max 3 per day)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RateLimitError'
  */
 router.post("/:taskId/retry", auth, retryTaskLimiter, retryTask);
 

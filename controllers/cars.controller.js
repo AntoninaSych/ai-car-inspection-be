@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { CarBrand, CarModel } from "../models/index.js";
+import ErrorCodes from "../helpers/errorCodes.js";
 
 /**
  * Get list of brands with optional search query
@@ -46,6 +47,7 @@ export const getBrands = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to load brands",
+            internalCode: ErrorCodes.SERVER_DATABASE_ERROR,
         });
     }
 };
@@ -60,6 +62,7 @@ export const getModelsByBrand = async (req, res) => {
         return res.status(400).json({
             success: false,
             message: "Brand ID is required",
+            internalCode: ErrorCodes.VALIDATION_REQUIRED_FIELD,
         });
     }
 
@@ -73,6 +76,7 @@ export const getModelsByBrand = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message: "Brand not found",
+                internalCode: ErrorCodes.RESOURCE_BRAND_NOT_FOUND,
             });
         }
 
@@ -106,6 +110,7 @@ export const getModelsByBrand = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to load models",
+            internalCode: ErrorCodes.SERVER_DATABASE_ERROR,
         });
     }
 };

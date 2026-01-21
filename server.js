@@ -3,7 +3,7 @@ dotenv.config({ path: "./.env" });
 
 import app from './app.js';
 import { connectDB } from './db/sequelize.js';
-import { startWorker, stopWorker } from './services/taskQueueService.js';
+import { startWorker, stopWorker, startMaintenanceWorker, stopMaintenanceWorker } from './services/taskQueueService.js';
 import { verifyEmailConnection } from './services/emailService.js';
 
 
@@ -27,6 +27,9 @@ const start = async () => {
         startWorker();
         console.log("📋 Task queue worker started");
 
+        // Start maintenance worker for scheduled cleanup tasks
+        await startMaintenanceWorker();
+
         // Verify email connection (non-blocking)
         verifyEmailConnection();
 
@@ -44,12 +47,14 @@ const start = async () => {
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received, shutting down...');
     await stopWorker();
+    await stopMaintenanceWorker();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('SIGINT received, shutting down...');
     await stopWorker();
+    await stopMaintenanceWorker();
     process.exit(0);
 });
 

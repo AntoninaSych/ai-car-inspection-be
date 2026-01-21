@@ -1,4 +1,5 @@
 import HttpError from "../helpers/HttpError.js";
+import ErrorCodes from "../helpers/errorCodes.js";
 import { Image, ImageType, Task } from "../models/index.js";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
@@ -7,19 +8,19 @@ import path from "path";
 export const uploadImageWithType = async (req, res, next) => {
     try {
         if (!req.file) {
-            return next(HttpError(400, "Image file is required"));
+            return next(HttpError(400, "Image file is required", ErrorCodes.VALIDATION_REQUIRED_FIELD));
         }
 
         const { type, task_id } = req.body;
 
         if (!type) {
-            return next(HttpError(400, "Image type is required"));
+            return next(HttpError(400, "Image type is required", ErrorCodes.VALIDATION_REQUIRED_FIELD));
         }
 
         // Validate type
         const allowed = await ImageType.findOne({ where: { name: type } });
         if (!allowed) {
-            return next(HttpError(400, `Invalid image type: ${type}`));
+            return next(HttpError(400, `Invalid image type: ${type}`, ErrorCodes.VALIDATION_INVALID_INPUT));
         }
 
         // Validate task_id (optional)
@@ -29,11 +30,11 @@ export const uploadImageWithType = async (req, res, next) => {
             task = await Task.findByPk(task_id);
 
             if (!task) {
-                return next(HttpError(404, `Task with id ${task_id} not found`));
+                return next(HttpError(404, `Task with id ${task_id} not found`, ErrorCodes.RESOURCE_TASK_NOT_FOUND));
             }
 
             if (task.owner_id !== req.user.id) {
-                return next(HttpError(403, "You are not the owner of this task"));
+                return next(HttpError(403, "You are not the owner of this task", ErrorCodes.RESOURCE_ACCESS_DENIED));
             }
         }
 

@@ -146,8 +146,16 @@ const router = Router();
  *                   created_at: "2024-01-15T10:30:00Z"
  *       401:
  *         description: Unauthorized - Invalid or missing authentication token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Permission denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/current", auth, getCurrentUserReports);
 
@@ -208,10 +216,22 @@ router.get("/current", auth, getCurrentUserReports);
  *                 created_at: "2024-01-15T10:30:00Z"
  *       401:
  *         description: Unauthorized - Invalid or missing authentication token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Permission denied - User does not own the associated task
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Report not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/:reportId", auth, getReportById);
 

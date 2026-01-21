@@ -15,10 +15,11 @@ import imagesRouter from "./routes/images.routes.js";
 import tasksRouter from "./routes/tasks.routes.js";
 import reportsRouter from "./routes/reports.routes.js";
 import stripeRouter from "./routes/stripe.routes.js";
-import { taskQueue } from "./services/taskQueueService.js";
+import { taskQueue, maintenanceQueue } from "./services/taskQueueService.js";
 
 import { stripeWebhookHandler } from "./controllers/stripeWebhookController.js";
 import HttpError from "./helpers/HttpError.js";
+import ErrorCodes from "./helpers/errorCodes.js";
 import authRoutes from "./routes/auth.routes.js";
 
 dotenv.config();
@@ -69,6 +70,58 @@ const swaggerOptions = {
           description: "Enter your JWT token",
         },
       },
+      schemas: {
+        ErrorResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "Human-readable error message",
+              example: "Not authorized",
+            },
+            internalCode: {
+              type: "string",
+              description: "Internal error code for frontend translation",
+              example: "AUTH_NOT_AUTHORIZED",
+            },
+          },
+          required: ["message", "internalCode"],
+        },
+        ValidationError: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "Validation error message",
+              example: "\"email\" is required",
+            },
+            internalCode: {
+              type: "string",
+              description: "Internal error code",
+              example: "VALIDATION_FAILED",
+              enum: ["VALIDATION_FAILED", "VALIDATION_REQUIRED_FIELD", "VALIDATION_INVALID_INPUT"],
+            },
+          },
+          required: ["message", "internalCode"],
+        },
+        RateLimitError: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "Rate limit error message",
+              example: "Too many requests. Please try again tomorrow.",
+            },
+            internalCode: {
+              type: "string",
+              description: "Rate limit error code",
+              example: "RATE_LIMIT_EXCEEDED",
+              enum: ["RATE_LIMIT_EXCEEDED", "RATE_LIMIT_PASSWORD_RESET", "RATE_LIMIT_TASK_RETRY", "RATE_LIMIT_EMAIL_VERIFICATION"],
+            },
+          },
+          required: ["message", "internalCode"],
+        },
+      },
     },
     security: [{ bearerAuth: [] }],
   },
@@ -82,16 +135,43 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 const serverAdapter = new ExpressAdapter();
 serverAdapter.setBasePath("/admin/queues");
 createBullBoard({
-  queues: [new BullMQAdapter(taskQueue)],
+  queues: [
+    new BullMQAdapter(taskQueue),
+    new BullMQAdapter(maintenanceQueue),
+  ],
   serverAdapter,
 });
-app.use("/admin/queues", serverAdapter.getRouter());
 
-app.use((req, res, next) => next(HttpError(404, "Not found")));
+// Basic Auth middleware for admin routes
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
+
+const adminAuth = (req, res, next) => {
+  const auth = req.headers.authorization;
+
+  if (!auth || !auth.startsWith("Basic ")) {
+    res.set("WWW-Authenticate", 'Basic realm="Admin Area"');
+    return res.status(401).send("Authentication required");
+  }
+
+  const credentials = Buffer.from(auth.slice(6), "base64").toString();
+  const [user, password] = credentials.split(":");
+
+  if (user === ADMIN_USER && password === ADMIN_PASSWORD) {
+    return next();
+  }
+
+  res.set("WWW-Authenticate", 'Basic realm="Admin Area"');
+  return res.status(401).send("Invalid credentials");
+};
+
+app.use("/admin/queues", adminAuth, serverAdapter.getRouter());
+
+app.use((req, res, next) => next(HttpError(404, "Not found", ErrorCodes.RESOURCE_NOT_FOUND)));
 
 app.use((err, req, res, next) => {
-  const { status = 500, message = "Server error" } = err;
-  res.status(status).json({ message });
+  const { status = 500, message = "Server error", internalCode = ErrorCodes.SERVER_ERROR } = err;
+  res.status(status).json({ message, internalCode });
 });
 
 export default app;

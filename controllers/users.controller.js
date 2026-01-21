@@ -1,5 +1,6 @@
 import { User } from "../models/index.js";
 import HttpError from "../helpers/HttpError.js";
+import ErrorCodes from "../helpers/errorCodes.js";
 import { fileURLToPath } from "url";
 import path from "path";
 import createDirIfNotExist from "../helpers/createDirIfNotExist.js";
@@ -15,7 +16,7 @@ export const getAllUsers = async (req, res, next) => {
     const users = await User.findAll();
     res.json(users);
   } catch (err) {
-    next(err.status ? err : HttpError(500, err.message));
+    next(err.status ? err : HttpError(500, err.message, ErrorCodes.SERVER_ERROR));
   }
 };
 
@@ -24,7 +25,7 @@ export const getUserInfo = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await User.findByPk(id);
-    if (!user) return res.status(404).json("User not found");
+    if (!user) return res.status(404).json({ message: "User not found", internalCode: ErrorCodes.RESOURCE_USER_NOT_FOUND });
 
 
     const avatarURL = user.avatarURL
@@ -41,7 +42,7 @@ export const getUserInfo = async (req, res, next) => {
       }
     });
   } catch (err) {
-    next(err.status ? err : HttpError(500, err.message));
+    next(err.status ? err : HttpError(500, err.message, ErrorCodes.SERVER_ERROR));
   }
 };
 
@@ -49,7 +50,7 @@ export const getUserInfo = async (req, res, next) => {
 export const changeAvatar = async (req, res, next) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "File upload error" });
+      return res.status(400).json({ message: "File upload error", internalCode: ErrorCodes.USER_AVATAR_UPLOAD_FAILED });
     }
 
     const { path: tempPath, filename } = req.file;
@@ -92,12 +93,12 @@ export const updateLanguage = async (req, res, next) => {
     const { language } = req.body;
 
     if (!language || typeof language !== 'string') {
-      return next(HttpError(400, "Language code is required"));
+      return next(HttpError(400, "Language code is required", ErrorCodes.VALIDATION_REQUIRED_FIELD));
     }
 
     const languageCode = language.toLowerCase().trim();
     if (languageCode.length < 2 || languageCode.length > 5) {
-      return next(HttpError(400, "Invalid language code"));
+      return next(HttpError(400, "Invalid language code", ErrorCodes.VALIDATION_INVALID_INPUT));
     }
 
     req.user.language = languageCode;
@@ -109,7 +110,7 @@ export const updateLanguage = async (req, res, next) => {
       language: req.user.language,
     });
   } catch (err) {
-    next(err.status ? err : HttpError(500, err.message));
+    next(err.status ? err : HttpError(500, err.message, ErrorCodes.SERVER_ERROR));
   }
 };
 
@@ -119,12 +120,12 @@ export const updateCurrency = async (req, res, next) => {
     const { currency } = req.body;
 
     if (!currency || typeof currency !== 'string') {
-      return next(HttpError(400, "Currency code is required"));
+      return next(HttpError(400, "Currency code is required", ErrorCodes.VALIDATION_REQUIRED_FIELD));
     }
 
     const currencyCode = currency.toUpperCase().trim();
     if (currencyCode.length !== 3) {
-      return next(HttpError(400, "Currency code must be 3 characters (ISO 4217)"));
+      return next(HttpError(400, "Currency code must be 3 characters (ISO 4217)", ErrorCodes.VALIDATION_INVALID_INPUT));
     }
 
     req.user.currency = currencyCode;
@@ -136,6 +137,6 @@ export const updateCurrency = async (req, res, next) => {
       currency: req.user.currency,
     });
   } catch (err) {
-    next(err.status ? err : HttpError(500, err.message));
+    next(err.status ? err : HttpError(500, err.message, ErrorCodes.SERVER_ERROR));
   }
 };

@@ -56,8 +56,16 @@ const router = Router();
  *                   example: Reset link sent
  *       400:
  *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
  *       429:
  *         description: Too many requests (max 3 per day)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RateLimitError'
  */
 router.post("/forgot-password", forgotPasswordLimiter, (req, res, next) => {
     forgotPassword(req, res, next).catch(next);
@@ -140,6 +148,10 @@ router.get("/reset-password/validate", (req, res, next) => {
  *                   example: Password updated successfully
  *       400:
  *         description: Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/reset-password", (req, res, next) => {
     resetPassword(req, res, next).catch(next);
@@ -273,6 +285,10 @@ router.get("/direct-access/validate", (req, res, next) => {
  *                   example: true
  *       400:
  *         description: Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/verify-email", (req, res, next) => {
     verifyEmail(req, res, next).catch(next);
@@ -309,8 +325,18 @@ router.get("/verify-email", (req, res, next) => {
  *                 message:
  *                   type: string
  *                   example: If the email exists and is not verified, a verification link will be sent
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
  *       429:
  *         description: Too many requests (max 3 per day)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RateLimitError'
  */
 router.post("/resend-verification", resendVerificationLimiter, (req, res, next) => {
     resendVerification(req, res, next).catch(next);

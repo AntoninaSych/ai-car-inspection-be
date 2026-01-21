@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { Task, TaskStatus } from "../models/index.js";
 import { addTaskToQueue } from "../services/taskQueueService.js";
+import ErrorCodes from "../helpers/errorCodes.js";
 
 const getStripeClient = () => {
     const key = process.env.STRIPE_SECRET_KEY;
@@ -13,7 +14,7 @@ export const stripeWebhookHandler = async (req, res) => {
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (!endpointSecret) {
-        return res.status(500).json({ message: "STRIPE_WEBHOOK_SECRET is not configured" });
+      return res.status(500).json({ message: "STRIPE_WEBHOOK_SECRET is not configured", internalCode: ErrorCodes.PAYMENT_STRIPE_NOT_CONFIGURED });
     }
 
     let event;
@@ -76,6 +77,6 @@ export const stripeWebhookHandler = async (req, res) => {
       return res.status(200).json({ received: true });
     } catch (err) {
         console.error("Stripe webhook handler failed:", err);
-        return res.status(500).json({ message: "Webhook handler failed" });
+      return res.status(500).json({ message: "Webhook handler failed", internalCode: ErrorCodes.PAYMENT_WEBHOOK_FAILED });
     }
 };
