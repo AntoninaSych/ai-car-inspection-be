@@ -29,7 +29,7 @@ export const verifyEmail = async (req, res, next) => {
             const codes = {
                 missing: ErrorCodes.VALIDATION_REQUIRED_FIELD,
                 invalid: ErrorCodes.AUTH_TOKEN_INVALID,
-                used: ErrorCodes.AUTH_TOKEN_INVALID,
+                used: ErrorCodes.AUTH_TOKEN_USED,
                 expired: ErrorCodes.AUTH_TOKEN_EXPIRED,
             };
             return res.status(400).json({
