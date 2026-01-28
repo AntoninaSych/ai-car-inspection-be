@@ -23,7 +23,7 @@ export const getBrands = async (req, res) => {
         const brands = await CarBrand.findAll({
             where,
             order: [["name", "ASC"]],
-            limit: 100,
+            limit: 1000,
             attributes: [
                 "id",
                 "code",
