@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import createDirIfNotExist from "../helpers/createDirIfNotExist.js";
 import fs from "fs/promises";
+import { getBaseUrl } from "../helpers/getBaseUrl.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,7 +31,7 @@ export const getUserInfo = async (req, res, next) => {
 
     const avatarURL = user.avatarURL
         ? user.avatarURL
-        : `${process.env.APP_URL}${defaultAvatar}`;
+      : `${getBaseUrl()}${defaultAvatar}`;
 
 
     res.status(200).json({
@@ -62,7 +63,7 @@ export const changeAvatar = async (req, res, next) => {
     await fs.rename(tempPath, resultPath);
 
 
-    const avatarURL = `${process.env.APP_URL}/public/images/avatars/${filename}`;
+    const avatarURL = `${getBaseUrl()}/public/images/avatars/${filename}`;
     // --------------------
 
     req.user.avatarURL = avatarURL;
@@ -81,7 +82,7 @@ export const getCurrent = async (req, res) => {
 
   const fullAvatarUrl = avatarURL
       ? avatarURL
-      : `${process.env.APP_URL}${defaultAvatar}`;
+    : `${getBaseUrl()}${defaultAvatar}`;
 
 
   res.status(200).json({ id, name, email, avatarURL: fullAvatarUrl, language, currency });

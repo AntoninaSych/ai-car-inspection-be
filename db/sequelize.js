@@ -13,47 +13,14 @@ const rootPath = path.resolve(__dirname, '..');
 // Load .env from project root
 dotenv.config({ path: path.join(rootPath, '.env') });
 
-// Debug
-console.log("Sequelize ENV:", process.env.NODE_ENV);
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
-
 const env = process.env.NODE_ENV || 'development';
 const config = configFile[env];
 
-let sequelize;
-
-// Case 1: DATABASE_URL provided
-if (config.use_env_variable) {
-    const url = process.env[config.use_env_variable];
-
-    if (!url) {
-        console.error(
-            `❌ ERROR: Environment variable ${config.use_env_variable} is missing.`
-        );
-        process.exit(1);
-    }
-
-    sequelize = new Sequelize(url, {
-        dialect: 'postgres',
-        dialectOptions: config.dialectOptions || {},
-        logging: false,
-    });
-
-// Case 2: fallback to manual config
-} else {
-    sequelize = new Sequelize(
-        config.database,
-        config.username,
-        config.password,
-        {
-            host: config.host,
-            port: config.port,
-            dialect: config.dialect,
-            dialectOptions: config.dialectOptions || {},
-            logging: false,
-        }
-    );
-}
+const sequelize = new Sequelize(config.url, {
+    dialect: 'postgres',
+    dialectOptions: config.dialectOptions || {},
+    logging: false,
+});
 
 export const connectDB = async () => {
     try {

@@ -1,23 +1,33 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+const {
+    POSTGRES_HOST = '127.0.0.1',
+    POSTGRES_PORT = '5433',
+    POSTGRES_USER = 'ai_car',
+    POSTGRES_PASSWORD = '',
+    POSTGRES_DB = 'ai_car',
+} = process.env;
+
+const DATABASE_URL = `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`;
+
 export default {
     development: {
-        use_env_variable: "DATABASE_URL",
+        url: DATABASE_URL,
         dialect: "postgres",
         dialectOptions: {
             ssl: false,
         },
     },
     test: {
-        use_env_variable: "DATABASE_URL",
+        url: DATABASE_URL,
         dialect: "postgres",
         dialectOptions: {
             ssl: false,
         },
     },
     production: {
-        use_env_variable: "DATABASE_URL",
+        url: DATABASE_URL,
         dialect: "postgres",
         dialectOptions: {
             ssl: {

@@ -10,7 +10,7 @@ const getStripeClient = () => {
 };
 
 const getFrontendBaseUrl = () => {
-    return process.env.FRONTEND_URL || process.env.APP_URL || "http://localhost:5173";
+    return process.env.FRONTEND_URL || "http://localhost:5173";
 };
 
 export const createCheckoutSession = async (req, res, next) => {

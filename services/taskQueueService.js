@@ -9,10 +9,12 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379", 10);
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
 
 const connection = {
     host: REDIS_HOST,
     port: REDIS_PORT,
+    password: REDIS_PASSWORD,
 };
 
 // Create the task processing queue
