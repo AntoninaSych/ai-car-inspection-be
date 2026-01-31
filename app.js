@@ -49,8 +49,9 @@ app.use("/api/stripe", stripeRouter);
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use("/avatars", express.static(path.join(__dirname, "public/images/avatars")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-const PORT = process.env.PORT || 5000;
-const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;
+
+import { getBaseUrl } from "./helpers/getBaseUrl.js";
+const BASE_URL = getBaseUrl();
 
 const swaggerOptions = {
   definition: {

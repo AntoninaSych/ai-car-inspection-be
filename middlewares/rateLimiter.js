@@ -5,6 +5,7 @@ import ErrorCodes from "../helpers/errorCodes.js";
 
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379", 10);
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
 
 let redisClient = null;
 
@@ -15,6 +16,7 @@ const getRedisClient = async () => {
                 host: REDIS_HOST,
                 port: REDIS_PORT,
             },
+            password: REDIS_PASSWORD,
         });
 
         redisClient.on("error", (err) => {

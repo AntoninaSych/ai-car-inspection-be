@@ -5,22 +5,13 @@ import app from './app.js';
 import { connectDB } from './db/sequelize.js';
 import { startWorker, stopWorker, startMaintenanceWorker, stopMaintenanceWorker } from './services/taskQueueService.js';
 import { verifyEmailConnection } from './services/emailService.js';
-
-
+import { getBaseUrl } from './helpers/getBaseUrl.js';
 
 const PORT = process.env.PORT || 5001;
-
+const BASE_URL = getBaseUrl();
 
 const start = async () => {
     try {
-        console.log("PORT:", PORT);
-        console.log("APP_URL:", process.env.APP_URL);
-
-        console.log("DATABASE_URL:", process.env.DATABASE_URL);
-        console.log("DB_USER:", process.env.DB_USER);
-        console.log("DB_PASSWORD:", process.env.DB_PASSWORD);
-        console.log("DB_HOST:", process.env.DB_HOST);
-
         await connectDB();
 
         // Start background task queue worker
@@ -34,8 +25,8 @@ const start = async () => {
         verifyEmailConnection();
 
         app.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`🚀 Swagger running at ${process.env.APP_URL}/api-docs/`);
+            console.log(`🚀 Server running at ${BASE_URL}`);
+            console.log(`🚀 Swagger running at ${BASE_URL}/api-docs/`);
         });
     } catch (err) {
         console.error('🚀❌ Failed to start server:', err.message);
