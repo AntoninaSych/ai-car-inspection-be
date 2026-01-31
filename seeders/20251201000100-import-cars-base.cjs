@@ -1,23 +1,24 @@
 "use strict";
 
-const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = {
     async up() {
-        console.log("🚗 Fetching data from Cars-Base API...");
+        console.log("🚗 Loading car data from local JSON...");
 
         // Load models (ESM)
         const { CarBrand, CarModel } = await import("../models/index.js");
 
-        const response = await axios.get("https://api.cars-base.ru/full", {
-            timeout: 300000,
-        });
+        const jsonPath = path.resolve(__dirname, "../db/source/cars.json");
+        const fileContent = fs.readFileSync(jsonPath, "utf-8");
+        const jsonData = JSON.parse(fileContent);
 
-        const brands = response.data?.data;
+        const brands = jsonData?.data;
 
         if (!Array.isArray(brands)) {
-            console.error("❌ Invalid API format:", response.data);
-            throw new Error("Cars-Base API did not return brand array");
+            console.error("❌ Invalid JSON format:", jsonData);
+            throw new Error("cars.json did not contain brand array");
         }
 
         console.log(`🔥 Import started: ${brands.length} brands found`);
