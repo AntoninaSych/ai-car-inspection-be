@@ -85,14 +85,18 @@ export const processTask = async (taskId) => {
         return { skipped: true, reason: "already_processed" };
     }
 
-    // Get images
-    const images = task.Images.map((img) => ({
-        path: img.local_path,
-        type: img.ImageType?.name || "unknown",
-    }));
+    // Get images and convert to expected format { front, back, left, right, issue }
+    const imageArray = task.Images;
 
-    if (images.length === 0) {
+    if (imageArray.length === 0) {
         throw new Error(`No images found for task: ${taskId}`);
+    }
+
+    // Convert array to object with type as key
+    const images = {};
+    for (const img of imageArray) {
+        const type = img.ImageType?.name || "unknown";
+        images[type] = img.local_path;
     }
 
     // Build car info with user preferences for currency and language
@@ -108,7 +112,7 @@ export const processTask = async (taskId) => {
         user_language: task.owner?.language || null,
     };
 
-    console.log(`[Queue] Analyzing ${images.length} images for ${carInfo.brand} ${carInfo.model}`);
+    console.log(`[Queue] Analyzing ${Object.keys(images).length} images for ${carInfo.brand} ${carInfo.model}`);
 
     // Update status to "processing"
     const processingStatus = await TaskStatus.findOne({ where: { name: "processing" } });

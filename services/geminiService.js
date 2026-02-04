@@ -10,24 +10,39 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
  * Convert image file to base64 and get mime type
  */
 async function fileToGenerativePart(filePath) {
-    const data = await fs.readFile(filePath);
-    const ext = path.extname(filePath).toLowerCase();
+    try {
+        const absolutePath = path.resolve(process.cwd(), filePath);
 
-    const mimeTypes = {
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.webp': 'image/webp',
-        '.heic': 'image/heic',
-        '.heif': 'image/heif'
-    };
+        console.log(`🔍 Reading file: ${absolutePath}`);
 
-    return {
-        inlineData: {
-            data: data.toString('base64'),
-            mimeType: mimeTypes[ext] || 'image/jpeg',
-        },
-    };
+        await fs.access(absolutePath);
+
+        const data = await fs.readFile(absolutePath);
+        const ext = path.extname(absolutePath).toLowerCase();
+
+        const mimeTypes = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.webp': 'image/webp',
+            '.heic': 'image/heic',
+            '.heif': 'image/heif'
+        };
+
+        const mimeType = mimeTypes[ext] || 'image/jpeg';
+
+        console.log(`✅ File read successfully: ${path.basename(absolutePath)} (${mimeType})`);
+
+        return {
+            inlineData: {
+                data: data.toString('base64'),
+                mimeType: mimeType,
+            },
+        };
+    } catch (error) {
+        console.error(`❌ Error reading file ${filePath}:`, error.message);
+        return null;
+    }
 }
 
 /**
@@ -68,7 +83,7 @@ export async function analyzeCarImages(images, carInfo) {
         // Build prompt from template
         const prompt = buildCarInspectionPrompt(carInfo, imageDescriptions);
 
-        const result = await model.generateContent([prompt, ...imageParts]);
+        const result = await model.generateContent([...imageParts, prompt]);
         const response = await result.response;
         const text = response.text();
 
